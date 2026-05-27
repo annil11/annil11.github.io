@@ -1,450 +1,461 @@
+Paste this entire code into your `index.html` on GitHub Pages.
+Make sure all your files are in the SAME folder as `index.html`:
+
+* `wallpaper.jpg`
+* `butterfly.png`
+* `butterfly iPod.svg`
+* `song 1.mp3`
+* `song 1 picture.jpeg`
+* `song 2.mp3`
+* `song 2 picture.png`
+* `song 3.mp3`
+* `song 3 picture.jpg`
+
+This creates:
+
+* Fullscreen wallpaper background
+* Draggable butterfly iPod
+* Interactive controls
+* Play / pause
+* Previous / next song
+* Dynamic album art on the iPod screen
+* Smooth animations
+* Mobile + desktop support
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Butterfly iPod</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Butterfly iPod</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        user-select:none;
+        -webkit-user-select:none;
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    body{
+        width:100vw;
+        height:100vh;
+        overflow:hidden;
+        background:url('wallpaper.jpg') center center/cover no-repeat;
+        font-family:Arial, sans-serif;
     }
 
-    /* ── Background ── */
-    #bg {
-      position: fixed;
-      inset: 0;
-      background: url('wallpaper.jpg') center center / cover no-repeat;
-      z-index: 0;
+    /* MAIN IPOD */
+    #ipod{
+        position:absolute;
+        width:420px;
+        max-width:80vw;
+        left:50%;
+        top:50%;
+        transform:translate(-50%, -50%);
+        cursor:grab;
+        z-index:10;
     }
 
-    /* ── Draggable iPod wrapper ── */
-    #ipod-wrapper {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      width: 320px;   /* adjust to match your butterfly.png natural width */
+    #ipod:active{
+        cursor:grabbing;
     }
 
-    #ipod-wrapper:active {
-      cursor: grabbing;
+    /* BASE IMAGE */
+    #ipodBase{
+        width:100%;
+        display:block;
+        pointer-events:none;
     }
 
-    /* ── iPod body image ── */
-    #ipod-body {
-      position: relative;
-      width: 100%;
+    /* SCREEN AREA */
+    #screen{
+        position:absolute;
+        top:15%;
+        left:25%;
+        width:50%;
+        height:20%;
+        overflow:hidden;
+        border-radius:12px;
+        background:#88d4ff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:
+            inset 0 0 10px rgba(0,0,0,0.3),
+            0 0 15px rgba(255,255,255,0.4);
     }
 
-    #ipod-body img#butterfly-img {
-      width: 100%;
-      display: block;
-      pointer-events: none; /* so drag events go to wrapper */
+    #albumArt{
+        width:100%;
+        height:100%;
+        object-fit:cover;
     }
 
-    /* ── Screen area (the "blue" zone) ──
-         Tweak top/left/width/height (as % of the wrapper) to align
-         perfectly with the screen cutout in your butterfly.png          */
-    #screen {
-      position: absolute;
-      top: 8%;
-      left: 12%;
-      width: 76%;
-      height: 38%;
-      overflow: hidden;
-      border-radius: 6px;
-      background: #0a0a1a;
+    /* WHEEL */
+    #wheel{
+        position:absolute;
+        bottom:14%;
+        left:50%;
+        transform:translateX(-50%);
+        width:42%;
+        aspect-ratio:1/1;
+        border-radius:50%;
     }
 
-    #screen img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      position: absolute;
-      top: 0; left: 0;
+    .btn{
+        position:absolute;
+        cursor:pointer;
+        z-index:20;
     }
 
-    #screen img.active {
-      opacity: 1;
+    /* PLAY / PAUSE */
+    #playBtn{
+        bottom:8%;
+        left:50%;
+        transform:translateX(-50%);
+        width:80px;
+        height:50px;
     }
 
-    #screen #idle-screen {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 6px;
-      opacity: 1;
-      transition: opacity 0.4s ease;
-      position: absolute;
-      top: 0; left: 0;
+    /* PREVIOUS */
+    #prevBtn{
+        top:50%;
+        left:5%;
+        transform:translateY(-50%);
+        width:70px;
+        height:70px;
     }
 
-    #screen #idle-screen.hidden {
-      opacity: 0;
-      pointer-events: none;
+    /* NEXT */
+    #nextBtn{
+        top:50%;
+        right:5%;
+        transform:translateY(-50%);
+        width:70px;
+        height:70px;
     }
 
-    .idle-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.25);
-      animation: pulse 2s infinite ease-in-out;
-    }
-    .idle-dot:nth-child(2) { animation-delay: 0.3s; }
-    .idle-dot:nth-child(3) { animation-delay: 0.6s; }
-
-    @keyframes pulse {
-      0%,100% { transform: scale(1); opacity: 0.25; }
-      50%      { transform: scale(1.6); opacity: 0.7; }
+    /* OPTIONAL SVG OVERLAY */
+    #overlaySvg{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        pointer-events:none;
     }
 
-    /* ── Track info bar ── */
-    #track-bar {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.75));
-      color: #fff;
-      font-size: 10px;
-      padding: 14px 8px 5px;
-      text-align: center;
-      letter-spacing: 0.04em;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    #track-bar.show { opacity: 1; }
-    #track-name { font-weight: 700; font-size: 11px; }
-
-    /* ── SVG overlay (button areas) ──
-         The SVG is placed on top of butterfly.png and sized identically.
-         All interactive areas are defined in butterfly iPod.svg.          */
-    #ipod-svg {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none; /* default off; only button areas are on */
+    /* SONG NAME */
+    #songTitle{
+        position:absolute;
+        top:4px;
+        left:0;
+        width:100%;
+        text-align:center;
+        color:white;
+        font-size:12px;
+        text-shadow:0 0 5px black;
+        z-index:2;
+        padding:2px;
+        background:rgba(0,0,0,0.35);
     }
 
-    /* Make the named button areas clickable */
-    #ipod-svg #btn-play,
-    #ipod-svg #btn-pause,
-    #ipod-svg #btn-prev,
-    #ipod-svg #btn-next {
-      pointer-events: all;
-      cursor: pointer;
+    /* GLOW EFFECT */
+    #ipod::after{
+        content:'';
+        position:absolute;
+        inset:0;
+        border-radius:20px;
+        pointer-events:none;
+        box-shadow:
+            0 0 40px rgba(255,255,255,0.15),
+            0 0 80px rgba(255,255,255,0.1);
     }
 
-    /* Button ripple on click */
-    @keyframes ripple {
-      from { opacity: 0.5; transform: scale(0.8); }
-      to   { opacity: 0;   transform: scale(1.5); }
+    @media(max-width:700px){
+        #ipod{
+            width:320px;
+        }
     }
-    .ripple-flash {
-      animation: ripple 0.35s ease-out forwards;
-    }
-
-    /* ── Progress bar ── */
-    #progress-container {
-      position: absolute;
-      bottom: 42%;   /* just below the screen – tweak to taste */
-      left: 12%;
-      width: 76%;
-      height: 3px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 2px;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    #progress-container.show { opacity: 1; }
-    #progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #a8edff, #6ec6ff);
-      border-radius: 2px;
-      transition: width 0.5s linear;
-    }
-  </style>
+</style>
 </head>
+
 <body>
 
-<!-- Background -->
-<div id="bg"></div>
+<div id="ipod">
 
-<!-- Draggable iPod -->
-<div id="ipod-wrapper">
-  <div id="ipod-body">
+    <!-- MAIN IPOD IMAGE -->
+    <img id="ipodBase" src="butterfly.png">
 
-    <!-- 1. iPod skin image -->
-    <img id="butterfly-img" src="butterfly.png" alt="iPod" draggable="false" />
+    <!-- OPTIONAL SVG OVERLAY -->
+    <img id="overlaySvg" src="butterfly iPod.svg">
 
-    <!-- 2. Screen (sits over the blue area in the skin) -->
+    <!-- SCREEN -->
     <div id="screen">
-      <!-- Idle state -->
-      <div id="idle-screen">
-        <div class="idle-dot"></div>
-        <div class="idle-dot"></div>
-        <div class="idle-dot"></div>
-      </div>
-      <!-- Song artwork -->
-      <img id="song-art-1" src="song 1 picture.jpeg" alt="Song 1" />
-      <img id="song-art-2" src="song 2 picture.jpeg" alt="Song 2" />
-      <img id="song-art-3" src="song 3 picture.jpeg" alt="Song 3" />
-      <!-- Track name bar -->
-      <div id="track-bar"><div id="track-name">—</div></div>
+        <div id="songTitle">Press Play</div>
+        <img id="albumArt" src="song 1 picture.jpeg">
     </div>
 
-    <!-- 3. Progress bar -->
-    <div id="progress-container"><div id="progress-fill"></div></div>
+    <!-- WHEEL -->
+    <div id="wheel">
 
-    <!-- 4. SVG overlay with button hit areas -->
-    <!--    The SVG must contain elements with id="btn-play", "btn-pause",
-            "btn-prev", "btn-next" matching the button positions.          -->
-    <img id="ipod-svg-img"
-         src="butterfly iPod.svg"
-         alt=""
-         draggable="false"
-         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" />
+        <!-- PREVIOUS -->
+        <div class="btn" id="prevBtn"></div>
 
-    <!--  Inline SVG shim  ────────────────────────────────────────────────
-          If your "butterfly iPod.svg" already contains the button <rect>s /
-          <path>s with the ids below, remove this entire <svg> block and
-          instead load the file with fetch() + innerHTML (see JS below).
-          This shim places four invisible click-zones. Adjust x/y/width/height
-          (as % of the wrapper) to land on your actual button artwork.       -->
-    <svg id="ipod-svg"
-         viewBox="0 0 100 100"
-         preserveAspectRatio="none"
-         xmlns="http://www.w3.org/2000/svg"
-         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
+        <!-- NEXT -->
+        <div class="btn" id="nextBtn"></div>
 
-      <!-- ▶ Play  – bottom-centre -->
-      <rect id="btn-play"  x="40" y="68" width="20" height="12"
-            rx="2" fill="transparent" stroke="none" />
+        <!-- PLAY -->
+        <div class="btn" id="playBtn"></div>
 
-      <!-- ⏸ Pause – same zone (toggled via JS) -->
-      <rect id="btn-pause" x="40" y="68" width="20" height="12"
-            rx="2" fill="transparent" stroke="none" />
+    </div>
 
-      <!-- ⏮ Prev  – bottom-left -->
-      <rect id="btn-prev"  x="14" y="68" width="20" height="12"
-            rx="2" fill="transparent" stroke="none" />
+</div>
 
-      <!-- ⏭ Next  – bottom-right -->
-      <rect id="btn-next"  x="66" y="68" width="20" height="12"
-            rx="2" fill="transparent" stroke="none" />
-
-    </svg>
-
-  </div><!-- /ipod-body -->
-</div><!-- /ipod-wrapper -->
-
-<!-- Audio elements -->
-<audio id="audio-1" src="song 1.mp3" preload="auto"></audio>
-<audio id="audio-2" src="song 2.mp3" preload="auto"></audio>
-<audio id="audio-3" src="song 3.mp3" preload="auto"></audio>
+<audio id="audio"></audio>
 
 <script>
-  /* ════════════════════════════════════════════
-     1.  DRAG  –  make the iPod movable
-  ════════════════════════════════════════════ */
-  const wrapper = document.getElementById('ipod-wrapper');
-  let dragging = false, startX, startY, origLeft, origTop;
 
-  wrapper.addEventListener('mousedown', startDrag);
-  wrapper.addEventListener('touchstart', startDrag, { passive: true });
+//////////////////////////////////////////////////////
+// SONG DATA
+//////////////////////////////////////////////////////
 
-  function startDrag(e) {
-    dragging = true;
-    const rect = wrapper.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    startX = clientX - rect.left;
-    startY = clientY - rect.top;
-    wrapper.style.transform = 'none';
-    wrapper.style.left = rect.left + 'px';
-    wrapper.style.top  = rect.top  + 'px';
-  }
-
-  document.addEventListener('mousemove', onDrag);
-  document.addEventListener('touchmove', onDrag, { passive: false });
-
-  function onDrag(e) {
-    if (!dragging) return;
-    if (e.cancelable) e.preventDefault();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    wrapper.style.left = (clientX - startX) + 'px';
-    wrapper.style.top  = (clientY - startY) + 'px';
-  }
-
-  document.addEventListener('mouseup',  () => dragging = false);
-  document.addEventListener('touchend', () => dragging = false);
-
-
-  /* ════════════════════════════════════════════
-     2.  PLAYER  –  songs, artwork, controls
-  ════════════════════════════════════════════ */
-  const songs = [
-    { audio: document.getElementById('audio-1'), art: document.getElementById('song-art-1'), name: 'Song 1' },
-    { audio: document.getElementById('audio-2'), art: document.getElementById('song-art-2'), name: 'Song 2' },
-    { audio: document.getElementById('audio-3'), art: document.getElementById('song-art-3'), name: 'Song 3' },
-  ];
-
-  let current = 0;
-  let playing = false;
-
-  const idleScreen  = document.getElementById('idle-screen');
-  const trackBar    = document.getElementById('track-bar');
-  const trackName   = document.getElementById('track-name');
-  const progressCnt = document.getElementById('progress-container');
-  const progressFill= document.getElementById('progress-fill');
-
-  function showArt(index) {
-    songs.forEach((s, i) => s.art.classList.toggle('active', i === index));
-    idleScreen.classList.add('hidden');
-    trackBar.classList.add('show');
-    progressCnt.classList.add('show');
-    trackName.textContent = songs[index].name;
-  }
-
-  function hideArt() {
-    songs.forEach(s => s.art.classList.remove('active'));
-    idleScreen.classList.remove('hidden');
-    trackBar.classList.remove('show');
-    progressCnt.classList.remove('show');
-    progressFill.style.width = '0%';
-  }
-
-  function stopAll() {
-    songs.forEach(s => { s.audio.pause(); s.audio.currentTime = 0; });
-    playing = false;
-  }
-
-  function play(index) {
-    stopAll();
-    current = index;
-    songs[current].audio.play().catch(() => {});
-    playing = true;
-    showArt(current);
-  }
-
-  function pause() {
-    songs[current].audio.pause();
-    playing = false;
-  }
-
-  function resume() {
-    songs[current].audio.play().catch(() => {});
-    playing = true;
-    showArt(current);
-  }
-
-  // Progress tracking
-  songs.forEach(s => {
-    s.audio.addEventListener('timeupdate', () => {
-      if (!s.audio.duration) return;
-      const pct = (s.audio.currentTime / s.audio.duration) * 100;
-      progressFill.style.width = pct + '%';
-    });
-    s.audio.addEventListener('ended', () => {
-      // auto-advance
-      play((current + 1) % songs.length);
-    });
-  });
-
-
-  /* ════════════════════════════════════════════
-     3.  BUTTON WIRING
-         Reads the SVG button areas by id and
-         attaches click handlers.
-  ════════════════════════════════════════════ */
-  function wireButton(id, handler) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.pointerEvents = 'all';
-    el.style.cursor = 'pointer';
-    el.addEventListener('click', (e) => {
-      e.stopPropagation(); // don't trigger drag
-      handler();
-      flashButton(el);
-    });
-  }
-
-  function flashButton(el) {
-    el.classList.remove('ripple-flash');
-    void el.offsetWidth; // reflow
-    el.classList.add('ripple-flash');
-    setTimeout(() => el.classList.remove('ripple-flash'), 400);
-  }
-
-  wireButton('btn-play',  () => {
-    if (!playing) {
-      if (songs[current].audio.currentTime > 0) resume();
-      else play(current);
+const songs = [
+    {
+        audio: "song 1.mp3",
+        image: "song 1 picture.jpeg",
+        title: "Song 1"
+    },
+    {
+        audio: "song 2.mp3",
+        image: "song 2 picture.png",
+        title: "Song 2"
+    },
+    {
+        audio: "song 3.mp3",
+        image: "song 3 picture.jpg",
+        title: "Song 3"
     }
-  });
+];
 
-  wireButton('btn-pause', () => {
-    if (playing) pause();
-    else if (songs[current].audio.currentTime === 0) hideArt();
-  });
+//////////////////////////////////////////////////////
+// ELEMENTS
+//////////////////////////////////////////////////////
 
-  wireButton('btn-prev',  () => {
-    const idx = (current - 1 + songs.length) % songs.length;
-    if (playing) play(idx);
-    else { current = idx; showArt(current); }
-  });
+const audio = document.getElementById("audio");
+const albumArt = document.getElementById("albumArt");
+const songTitle = document.getElementById("songTitle");
 
-  wireButton('btn-next',  () => {
-    const idx = (current + 1) % songs.length;
-    if (playing) play(idx);
-    else { current = idx; showArt(current); }
-  });
+const playBtn = document.getElementById("playBtn");
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
 
+//////////////////////////////////////////////////////
+// PLAYER STATE
+//////////////////////////////////////////////////////
 
-  /* ════════════════════════════════════════════
-     4.  OPTIONAL – load external SVG for buttons
-         Uncomment this block if you want to parse
-         "butterfly iPod.svg" for button positions
-         instead of the inline shim above.
+let currentSong = 0;
+let isPlaying = false;
 
-  fetch('butterfly iPod.svg')
-    .then(r => r.text())
-    .then(svgText => {
-      const parser = new DOMParser();
-      const doc    = parser.parseFromString(svgText, 'image/svg+xml');
-      const svgEl  = doc.querySelector('svg');
-      svgEl.id     = 'ipod-svg-loaded';
-      svgEl.style.cssText =
-        'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-      document.getElementById('ipod-body').appendChild(svgEl);
-      // re-wire after load
-      ['btn-play','btn-pause','btn-prev','btn-next'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.pointerEvents = 'all';
-      });
-    });
-  ════════════════════════════════════════════ */
+//////////////////////////////////////////////////////
+// LOAD SONG
+//////////////////////////////////////////////////////
+
+function loadSong(index){
+
+    currentSong = index;
+
+    audio.src = songs[index].audio;
+
+    albumArt.src = songs[index].image;
+
+    songTitle.innerText = songs[index].title;
+}
+
+loadSong(currentSong);
+
+//////////////////////////////////////////////////////
+// PLAY / PAUSE
+//////////////////////////////////////////////////////
+
+function playSong(){
+    audio.play();
+    isPlaying = true;
+    songTitle.innerText = "Playing: " + songs[currentSong].title;
+}
+
+function pauseSong(){
+    audio.pause();
+    isPlaying = false;
+    songTitle.innerText = "Paused: " + songs[currentSong].title;
+}
+
+playBtn.addEventListener("click", ()=>{
+
+    if(isPlaying){
+        pauseSong();
+    }else{
+        playSong();
+    }
+
+});
+
+//////////////////////////////////////////////////////
+// NEXT SONG
+//////////////////////////////////////////////////////
+
+function nextSong(){
+
+    currentSong++;
+
+    if(currentSong >= songs.length){
+        currentSong = 0;
+    }
+
+    loadSong(currentSong);
+
+    playSong();
+}
+
+//////////////////////////////////////////////////////
+// PREVIOUS SONG
+//////////////////////////////////////////////////////
+
+function prevSong(){
+
+    currentSong--;
+
+    if(currentSong < 0){
+        currentSong = songs.length - 1;
+    }
+
+    loadSong(currentSong);
+
+    playSong();
+}
+
+nextBtn.addEventListener("click", nextSong);
+prevBtn.addEventListener("click", prevSong);
+
+//////////////////////////////////////////////////////
+// AUTO NEXT
+//////////////////////////////////////////////////////
+
+audio.addEventListener("ended", nextSong);
+
+//////////////////////////////////////////////////////
+// DRAGGABLE IPOD
+//////////////////////////////////////////////////////
+
+const ipod = document.getElementById("ipod");
+
+let isDragging = false;
+
+let offsetX = 0;
+let offsetY = 0;
+
+ipod.addEventListener("mousedown", startDrag);
+document.addEventListener("mousemove", drag);
+document.addEventListener("mouseup", stopDrag);
+
+ipod.addEventListener("touchstart", startDragTouch, {passive:false});
+document.addEventListener("touchmove", dragTouch, {passive:false});
+document.addEventListener("touchend", stopDrag);
+
+function startDrag(e){
+
+    isDragging = true;
+
+    offsetX = e.clientX - ipod.offsetLeft;
+    offsetY = e.clientY - ipod.offsetTop;
+
+    ipod.style.transform = "none";
+}
+
+function drag(e){
+
+    if(!isDragging) return;
+
+    ipod.style.left = (e.clientX - offsetX) + "px";
+    ipod.style.top = (e.clientY - offsetY) + "px";
+}
+
+function stopDrag(){
+
+    isDragging = false;
+}
+
+function startDragTouch(e){
+
+    isDragging = true;
+
+    const touch = e.touches[0];
+
+    offsetX = touch.clientX - ipod.offsetLeft;
+    offsetY = touch.clientY - ipod.offsetTop;
+
+    ipod.style.transform = "none";
+}
+
+function dragTouch(e){
+
+    if(!isDragging) return;
+
+    const touch = e.touches[0];
+
+    ipod.style.left = (touch.clientX - offsetX) + "px";
+    ipod.style.top = (touch.clientY - offsetY) + "px";
+}
+
+//////////////////////////////////////////////////////
+// KEYBOARD CONTROLS
+//////////////////////////////////////////////////////
+
+document.addEventListener("keydown", (e)=>{
+
+    if(e.code === "Space"){
+
+        e.preventDefault();
+
+        if(isPlaying){
+            pauseSong();
+        }else{
+            playSong();
+        }
+    }
+
+    if(e.code === "ArrowRight"){
+        nextSong();
+    }
+
+    if(e.code === "ArrowLeft"){
+        prevSong();
+    }
+
+});
+
+//////////////////////////////////////////////////////
+// VISUAL FEEDBACK
+//////////////////////////////////////////////////////
+
+function flashButton(button){
+
+    button.style.background = "rgba(255,255,255,0.2)";
+
+    setTimeout(()=>{
+        button.style.background = "transparent";
+    },150);
+}
+
+playBtn.addEventListener("click", ()=>flashButton(playBtn));
+nextBtn.addEventListener("click", ()=>flashButton(nextBtn));
+prevBtn.addEventListener("click", ()=>flashButton(prevBtn));
 
 </script>
+
 </body>
 </html>
+```
