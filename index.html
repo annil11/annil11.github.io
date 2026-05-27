@@ -1,285 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Butterfly iPod</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🦋 Butterfly iPod</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-    }
+  :root {
+    --pink:    #ef60a3;
+    --pink-dk: #c0407a;
+    --pink-lt: #f9c0dd;
+    --cream:   #f8eef5;
+    --purple:  #7a2a5a;
+    --gold:    #c8b400;
+    --screen:  #b8d8ee;
+    --body:    #f1d8ec;
+    --glow:    rgba(239,96,163,0.55);
+  }
 
-    /* Full-page background */
-    #bg {
-      position: fixed; inset: 0;
-      background: url('wallpaper.jpg') center center / cover no-repeat;
-      z-index: 0;
-    }
+  html, body {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    font-family: 'Quicksand', sans-serif;
+    overflow: hidden;
+    min-height: 100vh;
+    position: relative;
+  }
 
-    /* Draggable iPod container */
-    #ipod-wrapper {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      /* Width controls the size of the whole iPod — adjust to taste */
-      width: 340px;
-    }
-    #ipod-wrapper:active { cursor: grabbing; }
+  /* ── Wallpaper background ── */
+  #bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: url('wallpaper.jpg') center center / cover no-repeat;
+  }
+  /* dark overlay so the widget pops */
+  #bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(10, 0, 18, 0.52);
+    backdrop-filter: blur(2px);
+  }
 
-    /* Relative container so screen + SVG overlay align to the PNG */
-    #ipod-body {
-      position: relative;
-      width: 100%;
-    }
+  /* sparkle dots layered on top */
+  #bg::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 1;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,.55) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.3)  0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,.4)  0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 55%, rgba(255,255,255,.6)  0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,.2)  0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.5)  0%, transparent 100%),
+      radial-gradient(2px 2px at 15% 50%, rgba(239,96,163,.4)   0%, transparent 100%),
+      radial-gradient(2px 2px at 75% 80%, rgba(239,96,163,.3)   0%, transparent 100%);
+    pointer-events: none;
+  }
 
-    /* The butterfly.png skin */
-    #butterfly-img {
-      width: 100%;
-      display: block;
-      pointer-events: none;
-      -webkit-user-drag: none;
-    }
+  .widget-wrap {
+    position: relative; z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: floatIn .9s cubic-bezier(.22,1,.36,1) both;
+  }
 
-    /*
-      Screen overlay — positioned to sit exactly over the blue rect in the SVG.
-      SVG viewBox = 595 × 510
-      Blue rect:  x=219.42  y=156.56  w=153.15  h=141.21  rx=30
+  @keyframes floatIn {
+    from { opacity:0; transform: translateY(40px) scale(.92); }
+    to   { opacity:1; transform: translateY(0)   scale(1); }
+  }
 
-      As percentages of the viewBox:
-        left   = 219.42 / 595  = 36.88%
-        top    = 156.56 / 510  = 30.70%
-        width  = 153.15 / 595  = 25.74%
-        height = 141.21 / 510  = 27.69%
-    */
-    #screen {
-      position: absolute;
-      left:   36.88%;
-      top:    30.70%;
-      width:  25.74%;
-      height: 27.69%;
-      border-radius: 10%;   /* mirrors the rx=30 on the SVG rect */
-      overflow: hidden;
-      background: #0a1020;
-    }
+  /* ── Track info panel ── */
+  .track-panel {
+    background: rgba(20, 0, 30, 0.55);
+    border: 1px solid rgba(239,96,163,.3);
+    border-radius: 16px;
+    padding: 10px 22px;
+    width: 320px;
+    text-align: center;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  }
+  .track-panel .track-title {
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: .03em;
+  }
+  .track-panel .track-artist {
+    font-size: 11px; color: var(--pink-lt);
+    margin-top: 3px; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+  }
 
-    #screen img.song-art {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 0.45s ease;
-      pointer-events: none;
-    }
-    #screen img.song-art.active { opacity: 1; }
+  /* ── Progress bar ── */
+  .progress-wrap {
+    width: 320px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .progress-track {
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,.15);
+    border-radius: 99px; position: relative;
+    cursor: pointer;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--pink), #ff9ed0);
+    transition: width .25s linear;
+    position: relative;
+    pointer-events: none;
+  }
+  .progress-fill::after {
+    content:'';
+    position:absolute; right:-5px; top:50%;
+    transform: translateY(-50%);
+    width:10px; height:10px;
+    background:#fff; border-radius:50%;
+    box-shadow: 0 0 6px var(--glow);
+  }
+  .time-label {
+    font-family:'Space Mono', monospace;
+    font-size:11px; color:rgba(255,255,255,.5);
+    min-width:32px;
+  }
+  .time-label.right { text-align:right; }
 
-    /* SVG overlay — same size as the PNG, sits on top */
-    #ipod-svg-overlay {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      pointer-events: none; /* passthrough by default */
-    }
-    #ipod-svg-overlay svg {
-      width: 100%; height: 100%;
-      display: block;
-    }
+  /* ── SVG skin ── */
+  .svg-wrap {
+    position: relative;
+    width: 420px;
+    filter: drop-shadow(0 20px 50px rgba(0,0,0,.8)) drop-shadow(0 0 30px var(--glow));
+    cursor: default;
+    user-select: none;
+  }
 
-    /* Button hit areas inside the SVG get pointer events */
-    .btn-hit {
-      pointer-events: all;
-      cursor: pointer;
-      fill: transparent;
-      stroke: none;
-    }
-    .btn-hit:active { opacity: 0.35; }
-  </style>
+  /* Click ripple on dial */
+  .ripple {
+    position:absolute;
+    border-radius:50%;
+    background: rgba(239,96,163,.35);
+    animation: rippleOut .5s ease-out forwards;
+    pointer-events:none;
+    transform: translate(-50%,-50%);
+  }
+  @keyframes rippleOut {
+    from { width:0; height:0; opacity:1; }
+    to   { width:120px; height:120px; opacity:0; }
+  }
+
+  /* Screen overlay content */
+  .screen-overlay {
+    position: absolute;
+    left:   calc(219.42 / 595 * 420px);
+    top:    calc(156.56 / 510 * 100%);
+    width:  calc(153.15 / 595 * 420px);
+    height: calc(141.21 / 510 * 100%);
+    border-radius: 22px;
+    display: flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    overflow: hidden;
+    pointer-events:none;
+  }
+  .screen-art {
+    width: 62px; height: 62px;
+    border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:30px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35);
+    background: linear-gradient(135deg, #f9c0dd 0%, #ef60a3 100%);
+    flex-shrink:0;
+    transition: box-shadow .3s ease;
+  }
+  .playing .screen-art {
+    animation: vinylSpin 3s linear infinite;
+    box-shadow: 0 0 18px var(--glow), 0 4px 14px rgba(0,0,0,.35);
+  }
+  @keyframes vinylSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .screen-label {
+    margin-top: 6px;
+    font-family:'Space Mono',monospace;
+    font-size:7.5px; color:#1a3a55;
+    text-align:center; font-weight:700;
+    line-height:1.3;
+    max-width:92%; overflow:hidden;
+  }
+
+  /* Volume */
+  .vol-wrap {
+    width: 320px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .vol-icon { font-size:14px; }
+  .vol-slider {
+    flex:1; -webkit-appearance:none; height:4px;
+    border-radius:99px;
+    background: linear-gradient(90deg, var(--pink) var(--vol,70%), rgba(255,255,255,.15) var(--vol,70%));
+    cursor:pointer;
+    outline: none;
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance:none;
+    width:14px; height:14px; border-radius:50%;
+    background:#fff; box-shadow:0 0 6px var(--glow);
+    cursor:pointer;
+  }
+  .vol-slider::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%;
+    background:#fff; box-shadow:0 0 6px var(--glow);
+    border:none; cursor:pointer;
+  }
+
+  /* Footer */
+  .footer {
+    font-size:11px; color:rgba(255,255,255,.25);
+    letter-spacing:.08em; text-transform:uppercase;
+    font-family:'Space Mono',monospace;
+  }
+
+  /* Error notice */
+  #audio-error {
+    display: none;
+    background: rgba(200,0,60,.2);
+    border: 1px solid rgba(239,96,163,.4);
+    border-radius: 10px;
+    color: #ffb0d0;
+    font-size: 11px;
+    padding: 6px 14px;
+    width: 320px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Responsive */
+  @media(max-width:460px){
+    .svg-wrap  { width: 94vw; }
+    .track-panel, .progress-wrap, .vol-wrap { width: 90vw; }
+  }
+</style>
 </head>
 <body>
 
 <div id="bg"></div>
 
-<div id="ipod-wrapper">
-  <div id="ipod-body">
+<div class="widget-wrap" id="widget">
 
-    <!-- 1. iPod skin image -->
-    <img id="butterfly-img" src="butterfly.png" alt="iPod" />
+  <!-- Track info -->
+  <div class="track-panel">
+    <div class="track-title"  id="trackTitle">Butterfly</div>
+    <div class="track-artist" id="trackArtist">Smile.dk</div>
+  </div>
 
-    <!-- 2. Screen: song artwork sits here -->
-    <div id="screen">
-      <img class="song-art" id="song-art-1" src="song 1 picture.jpeg" alt="" />
-      <img class="song-art" id="song-art-2" src="song 2 picture.png"  alt="" />
-      <img class="song-art" id="song-art-3" src="song 3 picture.jpg"  alt="" />
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <span class="time-label"       id="timeCur">0:00</span>
+    <div  class="progress-track"   id="progressTrack">
+      <div class="progress-fill"   id="progressFill" style="width:0%"></div>
     </div>
+    <span class="time-label right" id="timeTot">0:00</span>
+  </div>
 
-    <!-- 3. SVG overlay: transparent hit areas mapped to exact button positions -->
-    <div id="ipod-svg-overlay">
-      <!--
-        All coordinates are from the original SVG viewBox 595 × 510.
-        Hit areas are slightly enlarged for comfortable tapping.
-      -->
-      <svg viewBox="0 0 595 510"
-           xmlns="http://www.w3.org/2000/svg"
-           preserveAspectRatio="xMidYMid meet">
+  <!-- SVG skin -->
+  <div class="svg-wrap" id="svgWrap">
+    <svg id="butterfly-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 595 510">
+      <defs>
+        <!-- Wing gradient – translucent pinkish -->
+        <radialGradient id="wing-grad" cx="50%" cy="40%" r="60%" gradientUnits="objectBoundingBox">
+          <stop offset="0"   stop-color="#ff9ed0" stop-opacity=".6"/>
+          <stop offset=".55" stop-color="#c0407a" stop-opacity=".42"/>
+          <stop offset="1"   stop-color="#5a0030" stop-opacity=".22"/>
+        </radialGradient>
+        <!-- Body gradient -->
+        <linearGradient id="body-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0"   stop-color="#fce8f5"/>
+          <stop offset=".4"  stop-color="#f1d0e8"/>
+          <stop offset="1"   stop-color="#d0a0c0"/>
+        </linearGradient>
+        <!-- Dial gradient -->
+        <radialGradient id="dial-grad" cx="42%" cy="38%" r="58%">
+          <stop offset="0"   stop-color="#ff80c0"/>
+          <stop offset=".5"  stop-color="#ef60a3"/>
+          <stop offset="1"   stop-color="#a02060"/>
+        </radialGradient>
+        <!-- Center button gradient -->
+        <radialGradient id="center-grad" cx="38%" cy="32%" r="62%">
+          <stop offset="0"   stop-color="#fce0f0"/>
+          <stop offset=".7"  stop-color="#e8b8d8"/>
+          <stop offset="1"   stop-color="#c090b0"/>
+        </radialGradient>
+        <!-- Screen gradient -->
+        <linearGradient id="screen-grad" x1="0" y1="0" x2=".3" y2="1">
+          <stop offset="0"   stop-color="#d8eef8"/>
+          <stop offset=".5"  stop-color="#b8d8ee"/>
+          <stop offset="1"   stop-color="#88b8d8"/>
+        </linearGradient>
+        <!-- Gold dot gradient -->
+        <radialGradient id="gold-grad" cx="38%" cy="30%" r="70%">
+          <stop offset="0"  stop-color="#ffe84d"/>
+          <stop offset=".6" stop-color="#c8b400"/>
+          <stop offset="1"  stop-color="#7a6800"/>
+        </radialGradient>
+        <!-- Filters -->
+        <filter id="bevel" x="-5%" y="-5%" width="110%" height="110%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+          <feOffset dx="2" dy="3" result="shadow"/>
+          <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+        </filter>
+        <filter id="body-shadow" x="-10%" y="-5%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(80,0,40,.55)"/>
+        </filter>
+        <filter id="wing-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <filter id="btn-shadow">
+          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(120,0,60,.4)"/>
+        </filter>
+      </defs>
 
-        <!-- PLAY  — triangle pointing down, centred ~(295, 440) -->
-        <polygon id="btn-play"
-                 class="btn-hit"
-                 points="268,422 322,422 295,458" />
+      <!-- Antennas -->
+      <polygon style="fill:#e8d0e0;stroke:#c0a0b8;stroke-width:.8;stroke-miterlimit:10;" points="355.88 139.14 366.2 140.96 385.15 32.31 374.82 30.5 355.88 139.14"/>
+      <polygon style="fill:#e8d0e0;stroke:#c0a0b8;stroke-width:.8;stroke-miterlimit:10;" points="244.25 139.14 233.93 140.96 214.98 32.31 225.3 30.5 244.25 139.14"/>
 
-        <!-- PAUSE — two vertical rects side by side, centred ~(308, 440) -->
-        <rect id="btn-pause"
-              class="btn-hit"
-              x="293" y="424" width="30" height="24" />
+      <!-- Antenna tips -->
+      <ellipse cx="219.77" cy="29.3" rx="13.87" ry="13.93" style="fill:url(#gold-grad);stroke:#a08000;stroke-width:.5;filter:url(#bevel)"/>
+      <ellipse cx="380.35" cy="29.3" rx="13.87" ry="13.93" style="fill:url(#gold-grad);stroke:#a08000;stroke-width:.5;filter:url(#bevel)"/>
 
-        <!-- PREV  — left-pointing triangle, centred ~(240, 385) -->
-        <polygon id="btn-prev"
-                 class="btn-hit"
-                 points="265,362 265,408 218,385" />
+      <!-- Left wings -->
+      <g id="left-wings" style="filter:url(#wing-glow)">
+        <ellipse cx="144.66" cy="369.19" rx="72.45" ry="57.32" transform="translate(-237.14 262.15) rotate(-52.94)"
+          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+        <ellipse cx="131.99" cy="222.62" rx="69.71" ry="115.94" transform="translate(-105.27 119.23) rotate(-35.79)"
+          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+      </g>
 
-        <!-- NEXT  — right-pointing triangle, centred ~(350, 385) -->
-        <polygon id="btn-next"
-                 class="btn-hit"
-                 points="327,362 327,408 374,385" />
+      <!-- Right wings -->
+      <g id="right-wings" style="filter:url(#wing-glow)">
+        <ellipse cx="446.13" cy="372.44" rx="57.32" ry="72.45" transform="translate(-134.33 344.07) rotate(-37.06)"
+          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+        <ellipse cx="458.8"  cy="225.87" rx="115.94" ry="69.71" transform="translate(7.27 465.94) rotate(-54.21)"
+          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+      </g>
 
-      </svg>
+      <!-- Left wing decorations -->
+      <path style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;" d="M84.65,168.41c4.88,4.91,4.88,12.86,0,17.76-4.88,4.91-12.81,4.91-17.69,0s-4.88-12.86,0-17.76,12.81-4.91,17.69,0Z"/>
+      <ellipse cx="93.5"  cy="210.56" rx="9.25"  ry="9.29"  style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;"/>
+      <ellipse cx="134.8" cy="386.43" rx="22.55" ry="22.64" style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;filter:url(#bevel)"/>
+
+      <!-- Right wing decorations -->
+      <path style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;" d="M507.34,174.42c-4.88,4.91-4.88,12.86,0,17.76s12.81,4.91,17.69,0,4.88-12.86,0-17.76-12.81-4.91-17.69,0Z"/>
+      <ellipse cx="498.5" cy="216.58" rx="9.25"  ry="9.29"  style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;"/>
+      <ellipse cx="458.8" cy="386.43" rx="22.55" ry="22.64" style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;filter:url(#bevel)"/>
+
+      <!-- iPod body -->
+      <rect id="ipod-body" x="191.84" y="120.09" width="208.32" height="366.65" rx="60" ry="60"
+        style="fill:url(#body-grad);stroke:#c8a0c0;stroke-width:1.5;stroke-miterlimit:10;filter:url(#body-shadow)"/>
+      <!-- Body inner highlight -->
+      <rect x="200" y="128" width="192" height="350" rx="55" ry="55"
+        style="fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.5;stroke-miterlimit:10;pointer-events:none"/>
+
+      <!-- Screen -->
+      <rect x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"
+        style="fill:url(#screen-grad);stroke:#88b0d0;stroke-width:1.5;stroke-miterlimit:10;filter:url(#bevel)"/>
+      <!-- Screen glare -->
+      <rect x="228" y="162" width="58" height="28" rx="13"
+        style="fill:rgba(255,255,255,.28);pointer-events:none"/>
+
+      <!-- MENU text -->
+      <text style="fill:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;"
+        transform="translate(268 342)">MENU</text>
+
+      <!-- Dial background -->
+      <ellipse id="dial-bg" cx="296" cy="392.26" rx="80.32" ry="80.65"
+        style="fill:url(#dial-grad);stroke:#a02060;stroke-width:1.5;stroke-miterlimit:10;filter:url(#bevel);cursor:pointer"/>
+      <!-- Dial inner highlight ring -->
+      <ellipse cx="294" cy="390" rx="78" ry="78"
+        style="fill:none;stroke:rgba(255,160,210,.28);stroke-width:1;pointer-events:none"/>
+
+      <!-- Center button -->
+      <ellipse id="center-btn" cx="296" cy="392.26" rx="27.75" ry="27.86"
+        style="fill:url(#center-grad);stroke:#c090b0;stroke-width:1.5;stroke-miterlimit:10;cursor:pointer;filter:url(#bevel)"/>
+      <ellipse cx="290" cy="386" rx="14" ry="9"
+        style="fill:rgba(255,255,255,.32);pointer-events:none"/>
+
+      <!-- Prev button ◀◀ -->
+      <polygon id="btn-prev"
+        points="253.55 369.23 253.55 401.23 227.87 385.23 253.55 369.23"
+        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+
+      <!-- Next button ▶▶ -->
+      <polygon id="btn-next"
+        points="338.45 369.23 338.45 401.23 364.13 385.23 338.45 369.23"
+        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+
+      <!-- Play triangle ▶ -->
+      <polygon id="btn-play-tri"
+        points="278.62 428.69 278.62 452.24 295.44 440.46 278.62 428.69"
+        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+
+      <!-- Pause bars ⏸ -->
+      <g id="btn-pause-bars" style="cursor:pointer;filter:url(#btn-shadow)">
+        <rect x="301.24" y="431.37" width="4.58" height="18.18" style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round"/>
+        <rect x="312.09" y="431.37" width="4.58" height="18.18" style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round"/>
+      </g>
+    </svg>
+
+    <!-- Screen overlay -->
+    <div class="screen-overlay">
+      <div class="screen-art" id="screenArt">🦋</div>
+      <div class="screen-label" id="screenLabel">Butterfly</div>
     </div>
+  </div>
 
-  </div><!-- /ipod-body -->
-</div><!-- /ipod-wrapper -->
+  <!-- Audio error notice -->
+  <div id="audio-error">⚠️ Audio file not found — check filenames match exactly</div>
 
-<!-- Audio -->
-<audio id="audio-1" src="song 1.mp3" preload="auto"></audio>
-<audio id="audio-2" src="song 2.mp3" preload="auto"></audio>
-<audio id="audio-3" src="song 3.mp3" preload="auto"></audio>
+  <!-- Volume -->
+  <div class="vol-wrap">
+    <span class="vol-icon">🔈</span>
+    <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" style="--vol:80%"/>
+    <span class="vol-icon">🔊</span>
+  </div>
+
+  <div class="footer">🦋 Butterfly Pod</div>
+</div>
 
 <script>
-/* ═══════════════════════════════════════════
-   DRAG
-═══════════════════════════════════════════ */
-const wrapper = document.getElementById('ipod-wrapper');
-let dragging = false, startX = 0, startY = 0;
-
-wrapper.addEventListener('mousedown', startDrag);
-wrapper.addEventListener('touchstart', startDrag, { passive: true });
-
-function startDrag(e) {
-  // Don't start drag when clicking a button
-  if (e.target.closest('.btn-hit')) return;
-  dragging = true;
-  const rect = wrapper.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  startX = cx - rect.left;
-  startY = cy - rect.top;
-  // Switch from transform centering to absolute px positioning
-  wrapper.style.transform = 'none';
-  wrapper.style.left = rect.left + 'px';
-  wrapper.style.top  = rect.top  + 'px';
-}
-
-document.addEventListener('mousemove', onDrag);
-document.addEventListener('touchmove', onDrag, { passive: false });
-function onDrag(e) {
-  if (!dragging) return;
-  if (e.cancelable) e.preventDefault();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  wrapper.style.left = (cx - startX) + 'px';
-  wrapper.style.top  = (cy - startY) + 'px';
-}
-document.addEventListener('mouseup',  () => { dragging = false; });
-document.addEventListener('touchend', () => { dragging = false; });
-
-
-/* ═══════════════════════════════════════════
-   PLAYER
-═══════════════════════════════════════════ */
-const songs = [
-  {
-    audio: document.getElementById('audio-1'),
-    art:   document.getElementById('song-art-1')
-  },
-  {
-    audio: document.getElementById('audio-2'),
-    art:   document.getElementById('song-art-2')
-  },
-  {
-    audio: document.getElementById('audio-3'),
-    art:   document.getElementById('song-art-3')
-  }
+// ── Playlist ──────────────────────────────────────────────────────────────────
+const tracks = [
+  { title: "Butterfly",         artist: "Smile.dk",       emoji: "🦋", src: "song 1.mp3" },
+  { title: "One More Time",     artist: "Britney Spears",  emoji: "💃", src: "song 2.mp3" },
+  { title: "I Want It That Way",artist: "Backstreet Boys", emoji: "🎤", src: "song 3.mp3" },
 ];
 
-let current = 0;
+// ── State ─────────────────────────────────────────────────────────────────────
+let idx     = 0;
 let playing = false;
 
-function showArt(index) {
-  songs.forEach((s, i) => s.art.classList.toggle('active', i === index));
+// ── Audio ─────────────────────────────────────────────────────────────────────
+const audio = new Audio();
+audio.volume = 0.8;
+audio.preload = "metadata";
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const widget    = document.getElementById('widget');
+const titleEl   = document.getElementById('trackTitle');
+const artistEl  = document.getElementById('trackArtist');
+const fillEl    = document.getElementById('progressFill');
+const curEl     = document.getElementById('timeCur');
+const totEl     = document.getElementById('timeTot');
+const artEl     = document.getElementById('screenArt');
+const lblEl     = document.getElementById('screenLabel');
+const errEl     = document.getElementById('audio-error');
+const volSlider = document.getElementById('volSlider');
+
+function fmt(s) {
+  if (isNaN(s) || !isFinite(s)) return '0:00';
+  const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+  return `${m}:${ss.toString().padStart(2,'0')}`;
 }
 
-function stopAll() {
-  songs.forEach(s => { s.audio.pause(); s.audio.currentTime = 0; });
-  playing = false;
-}
+// ── Load track ────────────────────────────────────────────────────────────────
+function loadTrack(i, autoPlay = false) {
+  idx = (i + tracks.length) % tracks.length;
+  const t = tracks[idx];
 
-function playSong(index) {
-  stopAll();
-  current = index;
-  songs[current].audio.play().catch(() => {});
-  playing = true;
-  showArt(current);
-}
+  audio.src = t.src;
+  titleEl.textContent  = t.title;
+  artistEl.textContent = t.artist;
+  artEl.textContent    = t.emoji;
+  lblEl.textContent    = t.title;
+  fillEl.style.width   = '0%';
+  curEl.textContent    = '0:00';
+  totEl.textContent    = '0:00';
+  errEl.style.display  = 'none';
 
-function pauseSong() {
-  if (!playing) return;
-  songs[current].audio.pause();
-  playing = false;
-}
-
-function resumeSong() {
-  if (playing) return;
-  songs[current].audio.play().catch(() => {});
-  playing = true;
-}
-
-// Auto-advance when a track ends
-songs.forEach((s, i) => {
-  s.audio.addEventListener('ended', () => {
-    playSong((i + 1) % songs.length);
-  });
-});
-
-
-/* ═══════════════════════════════════════════
-   BUTTON WIRING
-═══════════════════════════════════════════ */
-document.getElementById('btn-play').addEventListener('click', () => {
-  if (!playing) {
-    // If never started, start from beginning; if paused, resume
-    songs[current].audio.currentTime > 0 ? resumeSong() : playSong(current);
+  if (autoPlay) {
+    audio.play().catch(showError);
+  } else {
+    stopVisuals();
   }
+}
+
+function showError(err) {
+  console.warn('Audio error:', err);
+  errEl.style.display = 'block';
+  stopVisuals();
+}
+
+// ── Playback controls ─────────────────────────────────────────────────────────
+function startVisuals() {
+  playing = true;
+  widget.classList.add('playing');
+}
+function stopVisuals() {
+  playing = false;
+  widget.classList.remove('playing');
+}
+
+function togglePlay() {
+  if (audio.paused) {
+    audio.play().catch(showError);
+  } else {
+    audio.pause();
+  }
+  ripple();
+}
+
+// Sync visuals with audio events
+audio.addEventListener('play',  () => { startVisuals(); });
+audio.addEventListener('pause', () => { stopVisuals(); });
+audio.addEventListener('ended', () => { loadTrack(idx + 1, true); });
+audio.addEventListener('error', () => { showError('file not found'); });
+
+// Progress sync
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  fillEl.style.width = pct.toFixed(2) + '%';
+  curEl.textContent  = fmt(audio.currentTime);
+});
+audio.addEventListener('durationchange', () => {
+  totEl.textContent = fmt(audio.duration);
 });
 
-document.getElementById('btn-pause').addEventListener('click', () => {
-  pauseSong();
-});
-
+// ── Button wiring ─────────────────────────────────────────────────────────────
 document.getElementById('btn-prev').addEventListener('click', () => {
-  const idx = (current - 1 + songs.length) % songs.length;
-  playing ? playSong(idx) : (current = idx, showArt(idx));
+  // Restart if >3s in, else go previous
+  if (audio.currentTime > 3) {
+    audio.currentTime = 0;
+  } else {
+    loadTrack(idx - 1, playing);
+  }
+  flash('btn-prev');
 });
 
 document.getElementById('btn-next').addEventListener('click', () => {
-  const idx = (current + 1) % songs.length;
-  playing ? playSong(idx) : (current = idx, showArt(idx));
+  loadTrack(idx + 1, playing);
+  flash('btn-next');
 });
+
+document.getElementById('btn-play-tri').addEventListener('click',   togglePlay);
+document.getElementById('btn-pause-bars').addEventListener('click', togglePlay);
+document.getElementById('center-btn').addEventListener('click',     togglePlay);
+
+// Dial outer ring = next track shortcut
+document.getElementById('dial-bg').addEventListener('click', (e) => {
+  const svgEl  = document.getElementById('butterfly-svg');
+  const cx = 296, cy = 392.26;
+  const rect   = svgEl.getBoundingClientRect();
+  const scaleX = 595 / rect.width, scaleY = 510 / rect.height;
+  const svgX   = (e.clientX - rect.left) * scaleX;
+  const svgY   = (e.clientY - rect.top)  * scaleY;
+  const d      = Math.hypot(svgX - cx, svgY - cy);
+  if (d > 28) { loadTrack(idx + 1, playing); flash('dial-bg'); }
+});
+
+// Progress bar seek
+document.getElementById('progressTrack').addEventListener('click', (e) => {
+  if (!audio.duration) return;
+  const r    = e.currentTarget.getBoundingClientRect();
+  const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  audio.currentTime = frac * audio.duration;
+});
+
+// Volume
+volSlider.addEventListener('input', function () {
+  audio.volume = this.value / 100;
+  this.style.setProperty('--vol', this.value + '%');
+});
+
+// ── Visual feedback ───────────────────────────────────────────────────────────
+function flash(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.transition = 'opacity .1s';
+  el.style.opacity    = '.35';
+  setTimeout(() => { el.style.opacity = ''; }, 160);
+}
+
+function ripple() {
+  const wrap  = document.getElementById('svgWrap');
+  const d     = document.createElement('div');
+  d.className = 'ripple';
+  const wRect = wrap.getBoundingClientRect();
+  const scale = wRect.width / 595;
+  d.style.left = (296 * scale) + 'px';
+  d.style.top  = ((392.26 / 510) * wRect.height) + 'px';
+  wrap.appendChild(d);
+  setTimeout(() => d.remove(), 600);
+}
+
+// Wing flutter on hover
+['left-wings','right-wings'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('mouseenter', () => {
+    el.style.transform  = 'scale(1.05)';
+    el.style.transition = 'transform .2s ease';
+    setTimeout(() => { el.style.transform = ''; }, 280);
+  });
+});
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space')       { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowRight')  { loadTrack(idx + 1, playing); }
+  if (e.code === 'ArrowLeft')   { loadTrack(idx - 1, playing); }
+  if (e.code === 'ArrowUp')     { volSlider.value = Math.min(100, +volSlider.value + 10); volSlider.dispatchEvent(new Event('input')); }
+  if (e.code === 'ArrowDown')   { volSlider.value = Math.max(0,   +volSlider.value - 10); volSlider.dispatchEvent(new Event('input')); }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadTrack(0, false);
 </script>
 </body>
 </html>
