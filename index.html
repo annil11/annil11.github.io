@@ -1,461 +1,285 @@
-Paste this entire code into your `index.html` on GitHub Pages.
-Make sure all your files are in the SAME folder as `index.html`:
-
-* `wallpaper.jpg`
-* `butterfly.png`
-* `butterfly iPod.svg`
-* `song 1.mp3`
-* `song 1 picture.jpeg`
-* `song 2.mp3`
-* `song 2 picture.png`
-* `song 3.mp3`
-* `song 3 picture.jpg`
-
-This creates:
-
-* Fullscreen wallpaper background
-* Draggable butterfly iPod
-* Interactive controls
-* Play / pause
-* Previous / next song
-* Dynamic album art on the iPod screen
-* Smooth animations
-* Mobile + desktop support
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Butterfly iPod</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-<title>Butterfly iPod</title>
-
-<style>
-    *{
-        margin:0;
-        padding:0;
-        box-sizing:border-box;
-        user-select:none;
-        -webkit-user-select:none;
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
     }
 
-    body{
-        width:100vw;
-        height:100vh;
-        overflow:hidden;
-        background:url('wallpaper.jpg') center center/cover no-repeat;
-        font-family:Arial, sans-serif;
+    /* Full-page background */
+    #bg {
+      position: fixed; inset: 0;
+      background: url('wallpaper.jpg') center center / cover no-repeat;
+      z-index: 0;
     }
 
-    /* MAIN IPOD */
-    #ipod{
-        position:absolute;
-        width:420px;
-        max-width:80vw;
-        left:50%;
-        top:50%;
-        transform:translate(-50%, -50%);
-        cursor:grab;
-        z-index:10;
+    /* Draggable iPod container */
+    #ipod-wrapper {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      /* Width controls the size of the whole iPod — adjust to taste */
+      width: 340px;
+    }
+    #ipod-wrapper:active { cursor: grabbing; }
+
+    /* Relative container so screen + SVG overlay align to the PNG */
+    #ipod-body {
+      position: relative;
+      width: 100%;
     }
 
-    #ipod:active{
-        cursor:grabbing;
+    /* The butterfly.png skin */
+    #butterfly-img {
+      width: 100%;
+      display: block;
+      pointer-events: none;
+      -webkit-user-drag: none;
     }
 
-    /* BASE IMAGE */
-    #ipodBase{
-        width:100%;
-        display:block;
-        pointer-events:none;
+    /*
+      Screen overlay — positioned to sit exactly over the blue rect in the SVG.
+      SVG viewBox = 595 × 510
+      Blue rect:  x=219.42  y=156.56  w=153.15  h=141.21  rx=30
+
+      As percentages of the viewBox:
+        left   = 219.42 / 595  = 36.88%
+        top    = 156.56 / 510  = 30.70%
+        width  = 153.15 / 595  = 25.74%
+        height = 141.21 / 510  = 27.69%
+    */
+    #screen {
+      position: absolute;
+      left:   36.88%;
+      top:    30.70%;
+      width:  25.74%;
+      height: 27.69%;
+      border-radius: 10%;   /* mirrors the rx=30 on the SVG rect */
+      overflow: hidden;
+      background: #0a1020;
     }
 
-    /* SCREEN AREA */
-    #screen{
-        position:absolute;
-        top:15%;
-        left:25%;
-        width:50%;
-        height:20%;
-        overflow:hidden;
-        border-radius:12px;
-        background:#88d4ff;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow:
-            inset 0 0 10px rgba(0,0,0,0.3),
-            0 0 15px rgba(255,255,255,0.4);
+    #screen img.song-art {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      pointer-events: none;
+    }
+    #screen img.song-art.active { opacity: 1; }
+
+    /* SVG overlay — same size as the PNG, sits on top */
+    #ipod-svg-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; /* passthrough by default */
+    }
+    #ipod-svg-overlay svg {
+      width: 100%; height: 100%;
+      display: block;
     }
 
-    #albumArt{
-        width:100%;
-        height:100%;
-        object-fit:cover;
+    /* Button hit areas inside the SVG get pointer events */
+    .btn-hit {
+      pointer-events: all;
+      cursor: pointer;
+      fill: transparent;
+      stroke: none;
     }
-
-    /* WHEEL */
-    #wheel{
-        position:absolute;
-        bottom:14%;
-        left:50%;
-        transform:translateX(-50%);
-        width:42%;
-        aspect-ratio:1/1;
-        border-radius:50%;
-    }
-
-    .btn{
-        position:absolute;
-        cursor:pointer;
-        z-index:20;
-    }
-
-    /* PLAY / PAUSE */
-    #playBtn{
-        bottom:8%;
-        left:50%;
-        transform:translateX(-50%);
-        width:80px;
-        height:50px;
-    }
-
-    /* PREVIOUS */
-    #prevBtn{
-        top:50%;
-        left:5%;
-        transform:translateY(-50%);
-        width:70px;
-        height:70px;
-    }
-
-    /* NEXT */
-    #nextBtn{
-        top:50%;
-        right:5%;
-        transform:translateY(-50%);
-        width:70px;
-        height:70px;
-    }
-
-    /* OPTIONAL SVG OVERLAY */
-    #overlaySvg{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        pointer-events:none;
-    }
-
-    /* SONG NAME */
-    #songTitle{
-        position:absolute;
-        top:4px;
-        left:0;
-        width:100%;
-        text-align:center;
-        color:white;
-        font-size:12px;
-        text-shadow:0 0 5px black;
-        z-index:2;
-        padding:2px;
-        background:rgba(0,0,0,0.35);
-    }
-
-    /* GLOW EFFECT */
-    #ipod::after{
-        content:'';
-        position:absolute;
-        inset:0;
-        border-radius:20px;
-        pointer-events:none;
-        box-shadow:
-            0 0 40px rgba(255,255,255,0.15),
-            0 0 80px rgba(255,255,255,0.1);
-    }
-
-    @media(max-width:700px){
-        #ipod{
-            width:320px;
-        }
-    }
-</style>
+    .btn-hit:active { opacity: 0.35; }
+  </style>
 </head>
-
 <body>
 
-<div id="ipod">
+<div id="bg"></div>
 
-    <!-- MAIN IPOD IMAGE -->
-    <img id="ipodBase" src="butterfly.png">
+<div id="ipod-wrapper">
+  <div id="ipod-body">
 
-    <!-- OPTIONAL SVG OVERLAY -->
-    <img id="overlaySvg" src="butterfly iPod.svg">
+    <!-- 1. iPod skin image -->
+    <img id="butterfly-img" src="butterfly.png" alt="iPod" />
 
-    <!-- SCREEN -->
+    <!-- 2. Screen: song artwork sits here -->
     <div id="screen">
-        <div id="songTitle">Press Play</div>
-        <img id="albumArt" src="song 1 picture.jpeg">
+      <img class="song-art" id="song-art-1" src="song 1 picture.jpeg" alt="" />
+      <img class="song-art" id="song-art-2" src="song 2 picture.png"  alt="" />
+      <img class="song-art" id="song-art-3" src="song 3 picture.jpg"  alt="" />
     </div>
 
-    <!-- WHEEL -->
-    <div id="wheel">
+    <!-- 3. SVG overlay: transparent hit areas mapped to exact button positions -->
+    <div id="ipod-svg-overlay">
+      <!--
+        All coordinates are from the original SVG viewBox 595 × 510.
+        Hit areas are slightly enlarged for comfortable tapping.
+      -->
+      <svg viewBox="0 0 595 510"
+           xmlns="http://www.w3.org/2000/svg"
+           preserveAspectRatio="xMidYMid meet">
 
-        <!-- PREVIOUS -->
-        <div class="btn" id="prevBtn"></div>
+        <!-- PLAY  — triangle pointing down, centred ~(295, 440) -->
+        <polygon id="btn-play"
+                 class="btn-hit"
+                 points="268,422 322,422 295,458" />
 
-        <!-- NEXT -->
-        <div class="btn" id="nextBtn"></div>
+        <!-- PAUSE — two vertical rects side by side, centred ~(308, 440) -->
+        <rect id="btn-pause"
+              class="btn-hit"
+              x="293" y="424" width="30" height="24" />
 
-        <!-- PLAY -->
-        <div class="btn" id="playBtn"></div>
+        <!-- PREV  — left-pointing triangle, centred ~(240, 385) -->
+        <polygon id="btn-prev"
+                 class="btn-hit"
+                 points="265,362 265,408 218,385" />
 
+        <!-- NEXT  — right-pointing triangle, centred ~(350, 385) -->
+        <polygon id="btn-next"
+                 class="btn-hit"
+                 points="327,362 327,408 374,385" />
+
+      </svg>
     </div>
 
-</div>
+  </div><!-- /ipod-body -->
+</div><!-- /ipod-wrapper -->
 
-<audio id="audio"></audio>
+<!-- Audio -->
+<audio id="audio-1" src="song 1.mp3" preload="auto"></audio>
+<audio id="audio-2" src="song 2.mp3" preload="auto"></audio>
+<audio id="audio-3" src="song 3.mp3" preload="auto"></audio>
 
 <script>
+/* ═══════════════════════════════════════════
+   DRAG
+═══════════════════════════════════════════ */
+const wrapper = document.getElementById('ipod-wrapper');
+let dragging = false, startX = 0, startY = 0;
 
-//////////////////////////////////////////////////////
-// SONG DATA
-//////////////////////////////////////////////////////
+wrapper.addEventListener('mousedown', startDrag);
+wrapper.addEventListener('touchstart', startDrag, { passive: true });
 
+function startDrag(e) {
+  // Don't start drag when clicking a button
+  if (e.target.closest('.btn-hit')) return;
+  dragging = true;
+  const rect = wrapper.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  startX = cx - rect.left;
+  startY = cy - rect.top;
+  // Switch from transform centering to absolute px positioning
+  wrapper.style.transform = 'none';
+  wrapper.style.left = rect.left + 'px';
+  wrapper.style.top  = rect.top  + 'px';
+}
+
+document.addEventListener('mousemove', onDrag);
+document.addEventListener('touchmove', onDrag, { passive: false });
+function onDrag(e) {
+  if (!dragging) return;
+  if (e.cancelable) e.preventDefault();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  wrapper.style.left = (cx - startX) + 'px';
+  wrapper.style.top  = (cy - startY) + 'px';
+}
+document.addEventListener('mouseup',  () => { dragging = false; });
+document.addEventListener('touchend', () => { dragging = false; });
+
+
+/* ═══════════════════════════════════════════
+   PLAYER
+═══════════════════════════════════════════ */
 const songs = [
-    {
-        audio: "song 1.mp3",
-        image: "song 1 picture.jpeg",
-        title: "Song 1"
-    },
-    {
-        audio: "song 2.mp3",
-        image: "song 2 picture.png",
-        title: "Song 2"
-    },
-    {
-        audio: "song 3.mp3",
-        image: "song 3 picture.jpg",
-        title: "Song 3"
-    }
+  {
+    audio: document.getElementById('audio-1'),
+    art:   document.getElementById('song-art-1')
+  },
+  {
+    audio: document.getElementById('audio-2'),
+    art:   document.getElementById('song-art-2')
+  },
+  {
+    audio: document.getElementById('audio-3'),
+    art:   document.getElementById('song-art-3')
+  }
 ];
 
-//////////////////////////////////////////////////////
-// ELEMENTS
-//////////////////////////////////////////////////////
+let current = 0;
+let playing = false;
 
-const audio = document.getElementById("audio");
-const albumArt = document.getElementById("albumArt");
-const songTitle = document.getElementById("songTitle");
-
-const playBtn = document.getElementById("playBtn");
-const nextBtn = document.getElementById("nextBtn");
-const prevBtn = document.getElementById("prevBtn");
-
-//////////////////////////////////////////////////////
-// PLAYER STATE
-//////////////////////////////////////////////////////
-
-let currentSong = 0;
-let isPlaying = false;
-
-//////////////////////////////////////////////////////
-// LOAD SONG
-//////////////////////////////////////////////////////
-
-function loadSong(index){
-
-    currentSong = index;
-
-    audio.src = songs[index].audio;
-
-    albumArt.src = songs[index].image;
-
-    songTitle.innerText = songs[index].title;
+function showArt(index) {
+  songs.forEach((s, i) => s.art.classList.toggle('active', i === index));
 }
 
-loadSong(currentSong);
-
-//////////////////////////////////////////////////////
-// PLAY / PAUSE
-//////////////////////////////////////////////////////
-
-function playSong(){
-    audio.play();
-    isPlaying = true;
-    songTitle.innerText = "Playing: " + songs[currentSong].title;
+function stopAll() {
+  songs.forEach(s => { s.audio.pause(); s.audio.currentTime = 0; });
+  playing = false;
 }
 
-function pauseSong(){
-    audio.pause();
-    isPlaying = false;
-    songTitle.innerText = "Paused: " + songs[currentSong].title;
+function playSong(index) {
+  stopAll();
+  current = index;
+  songs[current].audio.play().catch(() => {});
+  playing = true;
+  showArt(current);
 }
 
-playBtn.addEventListener("click", ()=>{
+function pauseSong() {
+  if (!playing) return;
+  songs[current].audio.pause();
+  playing = false;
+}
 
-    if(isPlaying){
-        pauseSong();
-    }else{
-        playSong();
-    }
+function resumeSong() {
+  if (playing) return;
+  songs[current].audio.play().catch(() => {});
+  playing = true;
+}
 
+// Auto-advance when a track ends
+songs.forEach((s, i) => {
+  s.audio.addEventListener('ended', () => {
+    playSong((i + 1) % songs.length);
+  });
 });
 
-//////////////////////////////////////////////////////
-// NEXT SONG
-//////////////////////////////////////////////////////
 
-function nextSong(){
-
-    currentSong++;
-
-    if(currentSong >= songs.length){
-        currentSong = 0;
-    }
-
-    loadSong(currentSong);
-
-    playSong();
-}
-
-//////////////////////////////////////////////////////
-// PREVIOUS SONG
-//////////////////////////////////////////////////////
-
-function prevSong(){
-
-    currentSong--;
-
-    if(currentSong < 0){
-        currentSong = songs.length - 1;
-    }
-
-    loadSong(currentSong);
-
-    playSong();
-}
-
-nextBtn.addEventListener("click", nextSong);
-prevBtn.addEventListener("click", prevSong);
-
-//////////////////////////////////////////////////////
-// AUTO NEXT
-//////////////////////////////////////////////////////
-
-audio.addEventListener("ended", nextSong);
-
-//////////////////////////////////////////////////////
-// DRAGGABLE IPOD
-//////////////////////////////////////////////////////
-
-const ipod = document.getElementById("ipod");
-
-let isDragging = false;
-
-let offsetX = 0;
-let offsetY = 0;
-
-ipod.addEventListener("mousedown", startDrag);
-document.addEventListener("mousemove", drag);
-document.addEventListener("mouseup", stopDrag);
-
-ipod.addEventListener("touchstart", startDragTouch, {passive:false});
-document.addEventListener("touchmove", dragTouch, {passive:false});
-document.addEventListener("touchend", stopDrag);
-
-function startDrag(e){
-
-    isDragging = true;
-
-    offsetX = e.clientX - ipod.offsetLeft;
-    offsetY = e.clientY - ipod.offsetTop;
-
-    ipod.style.transform = "none";
-}
-
-function drag(e){
-
-    if(!isDragging) return;
-
-    ipod.style.left = (e.clientX - offsetX) + "px";
-    ipod.style.top = (e.clientY - offsetY) + "px";
-}
-
-function stopDrag(){
-
-    isDragging = false;
-}
-
-function startDragTouch(e){
-
-    isDragging = true;
-
-    const touch = e.touches[0];
-
-    offsetX = touch.clientX - ipod.offsetLeft;
-    offsetY = touch.clientY - ipod.offsetTop;
-
-    ipod.style.transform = "none";
-}
-
-function dragTouch(e){
-
-    if(!isDragging) return;
-
-    const touch = e.touches[0];
-
-    ipod.style.left = (touch.clientX - offsetX) + "px";
-    ipod.style.top = (touch.clientY - offsetY) + "px";
-}
-
-//////////////////////////////////////////////////////
-// KEYBOARD CONTROLS
-//////////////////////////////////////////////////////
-
-document.addEventListener("keydown", (e)=>{
-
-    if(e.code === "Space"){
-
-        e.preventDefault();
-
-        if(isPlaying){
-            pauseSong();
-        }else{
-            playSong();
-        }
-    }
-
-    if(e.code === "ArrowRight"){
-        nextSong();
-    }
-
-    if(e.code === "ArrowLeft"){
-        prevSong();
-    }
-
+/* ═══════════════════════════════════════════
+   BUTTON WIRING
+═══════════════════════════════════════════ */
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (!playing) {
+    // If never started, start from beginning; if paused, resume
+    songs[current].audio.currentTime > 0 ? resumeSong() : playSong(current);
+  }
 });
 
-//////////////////////////////////////////////////////
-// VISUAL FEEDBACK
-//////////////////////////////////////////////////////
+document.getElementById('btn-pause').addEventListener('click', () => {
+  pauseSong();
+});
 
-function flashButton(button){
+document.getElementById('btn-prev').addEventListener('click', () => {
+  const idx = (current - 1 + songs.length) % songs.length;
+  playing ? playSong(idx) : (current = idx, showArt(idx));
+});
 
-    button.style.background = "rgba(255,255,255,0.2)";
-
-    setTimeout(()=>{
-        button.style.background = "transparent";
-    },150);
-}
-
-playBtn.addEventListener("click", ()=>flashButton(playBtn));
-nextBtn.addEventListener("click", ()=>flashButton(nextBtn));
-prevBtn.addEventListener("click", ()=>flashButton(prevBtn));
-
+document.getElementById('btn-next').addEventListener('click', () => {
+  const idx = (current + 1) % songs.length;
+  playing ? playSong(idx) : (current = idx, showArt(idx));
+});
 </script>
-
 </body>
 </html>
-```
