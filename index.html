@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Butterfly iPod</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    /* ── Background ── */
+    #bg {
+      position: fixed;
+      inset: 0;
+      background: url('wallpaper.jpg') center center / cover no-repeat;
+      z-index: 0;
+    }
+
+    /* ── Draggable iPod wrapper ── */
+    #ipod-wrapper {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      width: 320px;   /* adjust to match your butterfly.png natural width */
+    }
+
+    #ipod-wrapper:active {
+      cursor: grabbing;
+    }
+
+    /* ── iPod body image ── */
+    #ipod-body {
+      position: relative;
+      width: 100%;
+    }
+
+    #ipod-body img#butterfly-img {
+      width: 100%;
+      display: block;
+      pointer-events: none; /* so drag events go to wrapper */
+    }
+
+    /* ── Screen area (the "blue" zone) ──
+         Tweak top/left/width/height (as % of the wrapper) to align
+         perfectly with the screen cutout in your butterfly.png          */
+    #screen {
+      position: absolute;
+      top: 8%;
+      left: 12%;
+      width: 76%;
+      height: 38%;
+      overflow: hidden;
+      border-radius: 6px;
+      background: #0a0a1a;
+    }
+
+    #screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    #screen img.active {
+      opacity: 1;
+    }
+
+    #screen #idle-screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    #screen #idle-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .idle-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .idle-dot:nth-child(2) { animation-delay: 0.3s; }
+    .idle-dot:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1); opacity: 0.25; }
+      50%      { transform: scale(1.6); opacity: 0.7; }
+    }
+
+    /* ── Track info bar ── */
+    #track-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      color: #fff;
+      font-size: 10px;
+      padding: 14px 8px 5px;
+      text-align: center;
+      letter-spacing: 0.04em;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    #track-bar.show { opacity: 1; }
+    #track-name { font-weight: 700; font-size: 11px; }
+
+    /* ── SVG overlay (button areas) ──
+         The SVG is placed on top of butterfly.png and sized identically.
+         All interactive areas are defined in butterfly iPod.svg.          */
+    #ipod-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* default off; only button areas are on */
+    }
+
+    /* Make the named button areas clickable */
+    #ipod-svg #btn-play,
+    #ipod-svg #btn-pause,
+    #ipod-svg #btn-prev,
+    #ipod-svg #btn-next {
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    /* Button ripple on click */
+    @keyframes ripple {
+      from { opacity: 0.5; transform: scale(0.8); }
+      to   { opacity: 0;   transform: scale(1.5); }
+    }
+    .ripple-flash {
+      animation: ripple 0.35s ease-out forwards;
+    }
+
+    /* ── Progress bar ── */
+    #progress-container {
+      position: absolute;
+      bottom: 42%;   /* just below the screen – tweak to taste */
+      left: 12%;
+      width: 76%;
+      height: 3px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 2px;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    #progress-container.show { opacity: 1; }
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #a8edff, #6ec6ff);
+      border-radius: 2px;
+      transition: width 0.5s linear;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div id="bg"></div>
+
+<!-- Draggable iPod -->
+<div id="ipod-wrapper">
+  <div id="ipod-body">
+
+    <!-- 1. iPod skin image -->
+    <img id="butterfly-img" src="butterfly.png" alt="iPod" draggable="false" />
+
+    <!-- 2. Screen (sits over the blue area in the skin) -->
+    <div id="screen">
+      <!-- Idle state -->
+      <div id="idle-screen">
+        <div class="idle-dot"></div>
+        <div class="idle-dot"></div>
+        <div class="idle-dot"></div>
+      </div>
+      <!-- Song artwork -->
+      <img id="song-art-1" src="song 1 picture.jpeg" alt="Song 1" />
+      <img id="song-art-2" src="song 2 picture.jpeg" alt="Song 2" />
+      <img id="song-art-3" src="song 3 picture.jpeg" alt="Song 3" />
+      <!-- Track name bar -->
+      <div id="track-bar"><div id="track-name">—</div></div>
+    </div>
+
+    <!-- 3. Progress bar -->
+    <div id="progress-container"><div id="progress-fill"></div></div>
+
+    <!-- 4. SVG overlay with button hit areas -->
+    <!--    The SVG must contain elements with id="btn-play", "btn-pause",
+            "btn-prev", "btn-next" matching the button positions.          -->
+    <img id="ipod-svg-img"
+         src="butterfly iPod.svg"
+         alt=""
+         draggable="false"
+         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" />
+
+    <!--  Inline SVG shim  ────────────────────────────────────────────────
+          If your "butterfly iPod.svg" already contains the button <rect>s /
+          <path>s with the ids below, remove this entire <svg> block and
+          instead load the file with fetch() + innerHTML (see JS below).
+          This shim places four invisible click-zones. Adjust x/y/width/height
+          (as % of the wrapper) to land on your actual button artwork.       -->
+    <svg id="ipod-svg"
+         viewBox="0 0 100 100"
+         preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg"
+         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
+
+      <!-- ▶ Play  – bottom-centre -->
+      <rect id="btn-play"  x="40" y="68" width="20" height="12"
+            rx="2" fill="transparent" stroke="none" />
+
+      <!-- ⏸ Pause – same zone (toggled via JS) -->
+      <rect id="btn-pause" x="40" y="68" width="20" height="12"
+            rx="2" fill="transparent" stroke="none" />
+
+      <!-- ⏮ Prev  – bottom-left -->
+      <rect id="btn-prev"  x="14" y="68" width="20" height="12"
+            rx="2" fill="transparent" stroke="none" />
+
+      <!-- ⏭ Next  – bottom-right -->
+      <rect id="btn-next"  x="66" y="68" width="20" height="12"
+            rx="2" fill="transparent" stroke="none" />
+
+    </svg>
+
+  </div><!-- /ipod-body -->
+</div><!-- /ipod-wrapper -->
+
+<!-- Audio elements -->
+<audio id="audio-1" src="song 1.mp3" preload="auto"></audio>
+<audio id="audio-2" src="song 2.mp3" preload="auto"></audio>
+<audio id="audio-3" src="song 3.mp3" preload="auto"></audio>
+
+<script>
+  /* ════════════════════════════════════════════
+     1.  DRAG  –  make the iPod movable
+  ════════════════════════════════════════════ */
+  const wrapper = document.getElementById('ipod-wrapper');
+  let dragging = false, startX, startY, origLeft, origTop;
+
+  wrapper.addEventListener('mousedown', startDrag);
+  wrapper.addEventListener('touchstart', startDrag, { passive: true });
+
+  function startDrag(e) {
+    dragging = true;
+    const rect = wrapper.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX - rect.left;
+    startY = clientY - rect.top;
+    wrapper.style.transform = 'none';
+    wrapper.style.left = rect.left + 'px';
+    wrapper.style.top  = rect.top  + 'px';
+  }
+
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('touchmove', onDrag, { passive: false });
+
+  function onDrag(e) {
+    if (!dragging) return;
+    if (e.cancelable) e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    wrapper.style.left = (clientX - startX) + 'px';
+    wrapper.style.top  = (clientY - startY) + 'px';
+  }
+
+  document.addEventListener('mouseup',  () => dragging = false);
+  document.addEventListener('touchend', () => dragging = false);
+
+
+  /* ════════════════════════════════════════════
+     2.  PLAYER  –  songs, artwork, controls
+  ════════════════════════════════════════════ */
+  const songs = [
+    { audio: document.getElementById('audio-1'), art: document.getElementById('song-art-1'), name: 'Song 1' },
+    { audio: document.getElementById('audio-2'), art: document.getElementById('song-art-2'), name: 'Song 2' },
+    { audio: document.getElementById('audio-3'), art: document.getElementById('song-art-3'), name: 'Song 3' },
+  ];
+
+  let current = 0;
+  let playing = false;
+
+  const idleScreen  = document.getElementById('idle-screen');
+  const trackBar    = document.getElementById('track-bar');
+  const trackName   = document.getElementById('track-name');
+  const progressCnt = document.getElementById('progress-container');
+  const progressFill= document.getElementById('progress-fill');
+
+  function showArt(index) {
+    songs.forEach((s, i) => s.art.classList.toggle('active', i === index));
+    idleScreen.classList.add('hidden');
+    trackBar.classList.add('show');
+    progressCnt.classList.add('show');
+    trackName.textContent = songs[index].name;
+  }
+
+  function hideArt() {
+    songs.forEach(s => s.art.classList.remove('active'));
+    idleScreen.classList.remove('hidden');
+    trackBar.classList.remove('show');
+    progressCnt.classList.remove('show');
+    progressFill.style.width = '0%';
+  }
+
+  function stopAll() {
+    songs.forEach(s => { s.audio.pause(); s.audio.currentTime = 0; });
+    playing = false;
+  }
+
+  function play(index) {
+    stopAll();
+    current = index;
+    songs[current].audio.play().catch(() => {});
+    playing = true;
+    showArt(current);
+  }
+
+  function pause() {
+    songs[current].audio.pause();
+    playing = false;
+  }
+
+  function resume() {
+    songs[current].audio.play().catch(() => {});
+    playing = true;
+    showArt(current);
+  }
+
+  // Progress tracking
+  songs.forEach(s => {
+    s.audio.addEventListener('timeupdate', () => {
+      if (!s.audio.duration) return;
+      const pct = (s.audio.currentTime / s.audio.duration) * 100;
+      progressFill.style.width = pct + '%';
+    });
+    s.audio.addEventListener('ended', () => {
+      // auto-advance
+      play((current + 1) % songs.length);
+    });
+  });
+
+
+  /* ════════════════════════════════════════════
+     3.  BUTTON WIRING
+         Reads the SVG button areas by id and
+         attaches click handlers.
+  ════════════════════════════════════════════ */
+  function wireButton(id, handler) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.pointerEvents = 'all';
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't trigger drag
+      handler();
+      flashButton(el);
+    });
+  }
+
+  function flashButton(el) {
+    el.classList.remove('ripple-flash');
+    void el.offsetWidth; // reflow
+    el.classList.add('ripple-flash');
+    setTimeout(() => el.classList.remove('ripple-flash'), 400);
+  }
+
+  wireButton('btn-play',  () => {
+    if (!playing) {
+      if (songs[current].audio.currentTime > 0) resume();
+      else play(current);
+    }
+  });
+
+  wireButton('btn-pause', () => {
+    if (playing) pause();
+    else if (songs[current].audio.currentTime === 0) hideArt();
+  });
+
+  wireButton('btn-prev',  () => {
+    const idx = (current - 1 + songs.length) % songs.length;
+    if (playing) play(idx);
+    else { current = idx; showArt(current); }
+  });
+
+  wireButton('btn-next',  () => {
+    const idx = (current + 1) % songs.length;
+    if (playing) play(idx);
+    else { current = idx; showArt(current); }
+  });
+
+
+  /* ════════════════════════════════════════════
+     4.  OPTIONAL – load external SVG for buttons
+         Uncomment this block if you want to parse
+         "butterfly iPod.svg" for button positions
+         instead of the inline shim above.
+
+  fetch('butterfly iPod.svg')
+    .then(r => r.text())
+    .then(svgText => {
+      const parser = new DOMParser();
+      const doc    = parser.parseFromString(svgText, 'image/svg+xml');
+      const svgEl  = doc.querySelector('svg');
+      svgEl.id     = 'ipod-svg-loaded';
+      svgEl.style.cssText =
+        'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+      document.getElementById('ipod-body').appendChild(svgEl);
+      // re-wire after load
+      ['btn-play','btn-pause','btn-prev','btn-next'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.pointerEvents = 'all';
+      });
+    });
+  ════════════════════════════════════════════ */
+
+</script>
+</body>
+</html>
