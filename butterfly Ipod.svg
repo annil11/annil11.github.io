@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 595 510">
+  <!-- Generator: Adobe Illustrator 29.3.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 146)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke: url(#radial-gradient2);
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10 {
+        stroke-miterlimit: 10;
+      }
+
+      .st0, .st1, .st2, .st5, .st6 {
+        fill: #ef60a3;
+      }
+
+      .st1 {
+        stroke: url(#radial-gradient5);
+      }
+
+      .st2 {
+        stroke: url(#radial-gradient3);
+      }
+
+      .st3 {
+        fill: #e6e7e8;
+      }
+
+      .st3, .st4, .st8, .st9 {
+        stroke: #231f20;
+      }
+
+      .st3, .st4, .st8, .st9, .st10 {
+        stroke-linecap: round;
+      }
+
+      .st4 {
+        fill: #fff200;
+      }
+
+      .st5 {
+        stroke: url(#radial-gradient1);
+      }
+
+      .st5, .st6 {
+        stroke-width: .25px;
+      }
+
+      .st6 {
+        stroke: url(#radial-gradient);
+      }
+
+      .st11 {
+        font-size: 14px;
+      }
+
+      .st11, .st7, .st12 {
+        fill: #fff;
+      }
+
+      .st11, .st12 {
+        font-family: Futura-Medium, Futura;
+        font-weight: 500;
+      }
+
+      .st7 {
+        stroke: url(#radial-gradient4);
+      }
+
+      .st8 {
+        fill: #c4e1ef;
+      }
+
+      .st12 {
+        display: none;
+        font-size: 13.51px;
+      }
+
+      .st9 {
+        fill: #f9ed32;
+      }
+
+      .st10 {
+        fill: #f1e1ee;
+        stroke: #eecde2;
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="402.37" cy="375.28" fx="402.37" fy="375.28" r="58.25" gradientTransform="translate(340.69 -236.78) rotate(37.06) scale(1.12)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient1" cx="413.66" cy="245.13" fx="413.66" fy="245.13" r="85.23" gradientTransform="translate(411.41 -311.91) rotate(54.21) scale(1.12)" xlink:href="#radial-gradient"/>
+    <radialGradient id="radial-gradient2" cx="664.04" cy="518.08" fx="664.04" fy="518.08" r="58.62" gradientTransform="translate(-445.84 1111.17) rotate(-89.39) scale(1.12) skewX(.23)" xlink:href="#radial-gradient"/>
+    <radialGradient id="radial-gradient3" cx="276.16" cy="286.31" fx="276.16" fy="286.31" r="85.58" gradientTransform="translate(-178.89 -97.45) rotate(-.35) scale(1.12) skewX(-.23)" xlink:href="#radial-gradient"/>
+    <radialGradient id="radial-gradient4" cx="116.01" cy="154.09" fx="116.01" fy="154.09" r="0" gradientTransform="translate(-5.14 -50.2) scale(1.12)" xlink:href="#radial-gradient"/>
+    <radialGradient id="radial-gradient5" cx="268.5" cy="392.88" fx="268.5" fy="392.88" r="72.12" gradientTransform="translate(-5.14 -50.2) scale(1.12)" xlink:href="#radial-gradient"/>
+  </defs>
+  <polygon class="st10" points="355.88 139.14 366.2 140.96 385.15 32.31 374.82 30.5 355.88 139.14"/>
+  <polygon class="st10" points="244.25 139.14 233.93 140.96 214.98 32.31 225.3 30.5 244.25 139.14"/>
+  <g>
+    <ellipse class="st6" cx="446.13" cy="372.44" rx="57.32" ry="72.45" transform="translate(-134.33 344.07) rotate(-37.06)"/>
+    <ellipse class="st5" cx="458.8" cy="225.87" rx="115.94" ry="69.71" transform="translate(7.27 465.94) rotate(-54.21)"/>
+  </g>
+  <g>
+    <ellipse class="st0" cx="144.66" cy="369.19" rx="72.45" ry="57.32" transform="translate(-237.14 262.15) rotate(-52.94)"/>
+    <ellipse class="st2" cx="131.99" cy="222.62" rx="69.71" ry="115.94" transform="translate(-105.27 119.23) rotate(-35.79)"/>
+  </g>
+  <rect class="st10" x="191.84" y="120.09" width="208.32" height="366.65" rx="60" ry="60"/>
+  <rect class="st8" x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"/>
+  <path class="st7" d="M124.97,123.34"/>
+  <g>
+    <path class="st9" d="M84.65,168.41c4.88,4.91,4.88,12.86,0,17.76-4.88,4.91-12.81,4.91-17.69,0s-4.88-12.86,0-17.76,12.81-4.91,17.69,0Z"/>
+    <ellipse class="st9" cx="93.5" cy="210.56" rx="9.25" ry="9.29"/>
+  </g>
+  <g>
+    <path class="st4" d="M507.34,174.42c-4.88,4.91-4.88,12.86,0,17.76s12.81,4.91,17.69,0,4.88-12.86,0-17.76-12.81-4.91-17.69,0Z"/>
+    <ellipse class="st4" cx="498.5" cy="216.58" rx="9.25" ry="9.29"/>
+  </g>
+  <ellipse class="st4" cx="134.8" cy="386.43" rx="22.55" ry="22.64"/>
+  <ellipse class="st4" cx="458.8" cy="386.43" rx="22.55" ry="22.64"/>
+  <ellipse class="st9" cx="219.77" cy="29.3" rx="13.87" ry="13.93"/>
+  <ellipse class="st9" cx="380.35" cy="29.3" rx="13.87" ry="13.93"/>
+  <text/>
+  <text class="st12" transform="translate(278.12 344.69)"><tspan x="0" y="0">MENU</tspan></text>
+  <g>
+    <ellipse class="st1" cx="296" cy="392.26" rx="80.32" ry="80.65"/>
+    <ellipse class="st10" cx="296" cy="392.26" rx="27.75" ry="27.86"/>
+  </g>
+  <g>
+    <polygon class="st3" points="253.55 369.23 253.55 401.23 227.87 385.23 253.55 369.23"/>
+    <polygon class="st3" points="338.45 369.23 338.45 401.23 364.13 385.23 338.45 369.23"/>
+    <polygon class="st3" points="278.62 428.69 278.62 452.24 295.44 440.46 278.62 428.69"/>
+    <g>
+      <rect class="st3" x="301.24" y="431.37" width="4.58" height="18.18"/>
+      <rect class="st3" x="312.09" y="431.37" width="4.58" height="18.18"/>
+    </g>
+    <text class="st11" transform="translate(274.46 340.94)"><tspan x="0" y="0">MENU</tspan></text>
+  </g>
+</svg>
