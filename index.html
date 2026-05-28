@@ -1,622 +1,527 @@
+# index.html
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Butterfly iPod</title>
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Butterfly iPod Widget</title>
 
-  :root {
-    --pink:    #ef60a3;
-    --pink-dk: #c0407a;
-    --pink-lt: #f9c0dd;
-    --cream:   #f8eef5;
-    --purple:  #7a2a5a;
-    --gold:    #c8b400;
-    --screen:  #b8d8ee;
-    --body:    #f1d8ec;
-    --glow:    rgba(239,96,163,0.55);
-  }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  html, body {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
-    font-family: 'Quicksand', sans-serif;
-    overflow: hidden;
-    min-height: 100vh;
-    position: relative;
-  }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top, #382040 0%, #150f1f 45%, #060608 100%);
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-  /* ── Wallpaper background ── */
-  #bg {
-    position: fixed; inset: 0; z-index: 0;
-    background: url('wallpaper.jpg') center center / cover no-repeat;
-  }
-  /* dark overlay so the widget pops */
-  #bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: rgba(10, 0, 18, 0.52);
-    backdrop-filter: blur(2px);
-  }
+    .glow {
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 85, 180, 0.18), transparent 60%);
+      filter: blur(40px);
+      pointer-events: none;
+      animation: pulse 8s ease-in-out infinite;
+    }
 
-  /* sparkle dots layered on top */
-  #bg::before {
-    content: '';
-    position: absolute; inset: 0; z-index: 1;
-    background-image:
-      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,.55) 0%, transparent 100%),
-      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.3)  0%, transparent 100%),
-      radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,.4)  0%, transparent 100%),
-      radial-gradient(1px 1px at 80% 55%, rgba(255,255,255,.6)  0%, transparent 100%),
-      radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,.2)  0%, transparent 100%),
-      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.5)  0%, transparent 100%),
-      radial-gradient(2px 2px at 15% 50%, rgba(239,96,163,.4)   0%, transparent 100%),
-      radial-gradient(2px 2px at 75% 80%, rgba(239,96,163,.3)   0%, transparent 100%);
-    pointer-events: none;
-  }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+      }
 
-  .widget-wrap {
-    position: relative; z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    animation: floatIn .9s cubic-bezier(.22,1,.36,1) both;
-  }
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+    }
 
-  @keyframes floatIn {
-    from { opacity:0; transform: translateY(40px) scale(.92); }
-    to   { opacity:1; transform: translateY(0)   scale(1); }
-  }
+    .player {
+      position: relative;
+      width: 460px;
+      height: 700px;
+      filter: drop-shadow(0 30px 40px rgba(0,0,0,.65));
+      animation: float 6s ease-in-out infinite;
+    }
 
-  /* ── Track info panel ── */
-  .track-panel {
-    background: rgba(20, 0, 30, 0.55);
-    border: 1px solid rgba(239,96,163,.3);
-    border-radius: 16px;
-    padding: 10px 22px;
-    width: 320px;
-    text-align: center;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 4px 24px rgba(0,0,0,.5);
-  }
-  .track-panel .track-title {
-    font-size: 15px; font-weight: 700;
-    color: #fff;
-    white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: .03em;
-  }
-  .track-panel .track-artist {
-    font-size: 11px; color: var(--pink-lt);
-    margin-top: 3px; font-weight: 600;
-    letter-spacing: .07em; text-transform: uppercase;
-  }
+    @keyframes float {
+      0%,100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
 
-  /* ── Progress bar ── */
-  .progress-wrap {
-    width: 320px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .progress-track {
-    flex: 1; height: 4px;
-    background: rgba(255,255,255,.15);
-    border-radius: 99px; position: relative;
-    cursor: pointer;
-  }
-  .progress-fill {
-    height: 100%; border-radius: 99px;
-    background: linear-gradient(90deg, var(--pink), #ff9ed0);
-    transition: width .25s linear;
-    position: relative;
-    pointer-events: none;
-  }
-  .progress-fill::after {
-    content:'';
-    position:absolute; right:-5px; top:50%;
-    transform: translateY(-50%);
-    width:10px; height:10px;
-    background:#fff; border-radius:50%;
-    box-shadow: 0 0 6px var(--glow);
-  }
-  .time-label {
-    font-family:'Space Mono', monospace;
-    font-size:11px; color:rgba(255,255,255,.5);
-    min-width:32px;
-  }
-  .time-label.right { text-align:right; }
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
 
-  /* ── SVG skin ── */
-  .svg-wrap {
-    position: relative;
-    width: 420px;
-    filter: drop-shadow(0 20px 50px rgba(0,0,0,.8)) drop-shadow(0 0 30px var(--glow));
-    cursor: default;
-    user-select: none;
-  }
+    .wing {
+      fill: url(#wingGradient);
+      stroke: #f6d9ef;
+      stroke-width: 14;
+      filter: url(#wingShadow);
+      opacity: .94;
+      backdrop-filter: blur(6px);
+      transition: transform .5s ease;
+      transform-origin: center;
+    }
 
-  /* Click ripple on dial */
-  .ripple {
-    position:absolute;
-    border-radius:50%;
-    background: rgba(239,96,163,.35);
-    animation: rippleOut .5s ease-out forwards;
-    pointer-events:none;
-    transform: translate(-50%,-50%);
-  }
-  @keyframes rippleOut {
-    from { width:0; height:0; opacity:1; }
-    to   { width:120px; height:120px; opacity:0; }
-  }
+    .wing-inner {
+      fill: rgba(255,255,255,.08);
+      mix-blend-mode: screen;
+      filter: blur(2px);
+    }
 
-  /* Screen overlay content */
-  .screen-overlay {
-    position: absolute;
-    left:   calc(219.42 / 595 * 420px);
-    top:    calc(156.56 / 510 * 100%);
-    width:  calc(153.15 / 595 * 420px);
-    height: calc(141.21 / 510 * 100%);
-    border-radius: 22px;
-    display: flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    overflow: hidden;
-    pointer-events:none;
-  }
-  .screen-art {
-    width: 90px; height: 84px;
-    border-radius: 10px;
-    display: block;
-    object-fit: cover;
-    box-shadow: 0 4px 14px rgba(0,0,0,.45);
-    flex-shrink: 0;
-    transition: box-shadow .3s ease, opacity .3s ease;
-    background: #c0a0b8;
-  }
-  .playing .screen-art {
-    box-shadow: 0 0 18px var(--glow), 0 4px 14px rgba(0,0,0,.45);
-  }
-  .screen-label {
-    margin-top: 6px;
-    font-family:'Space Mono',monospace;
-    font-size:7.5px; color:#1a3a55;
-    text-align:center; font-weight:700;
-    line-height:1.3;
-    max-width:92%; overflow:hidden;
-  }
+    .body {
+      fill: url(#bodyGradient);
+      stroke: #f2dce9;
+      stroke-width: 8;
+      filter: url(#bodyShadow);
+    }
 
-  /* Volume */
-  .vol-wrap {
-    width: 320px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .vol-icon { font-size:14px; }
-  .vol-slider {
-    flex:1; -webkit-appearance:none; height:4px;
-    border-radius:99px;
-    background: linear-gradient(90deg, var(--pink) var(--vol,70%), rgba(255,255,255,.15) var(--vol,70%));
-    cursor:pointer;
-    outline: none;
-  }
-  .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance:none;
-    width:14px; height:14px; border-radius:50%;
-    background:#fff; box-shadow:0 0 6px var(--glow);
-    cursor:pointer;
-  }
-  .vol-slider::-moz-range-thumb {
-    width:14px; height:14px; border-radius:50%;
-    background:#fff; box-shadow:0 0 6px var(--glow);
-    border:none; cursor:pointer;
-  }
+    .screen {
+      fill: url(#screenGradient);
+      stroke: rgba(30,40,50,.8);
+      stroke-width: 4;
+      filter: url(#screenGlow);
+    }
 
-  /* Footer */
-  .footer {
-    font-size:11px; color:rgba(255,255,255,.25);
-    letter-spacing:.08em; text-transform:uppercase;
-    font-family:'Space Mono',monospace;
-  }
+    .wheel {
+      fill: url(#wheelGradient);
+      stroke: #d34484;
+      stroke-width: 4;
+      cursor: pointer;
+      transition: transform .18s ease;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+    }
 
-  /* Error notice */
-  #audio-error {
-    display: none;
-    background: rgba(200,0,60,.2);
-    border: 1px solid rgba(239,96,163,.4);
-    border-radius: 10px;
-    color: #ffb0d0;
-    font-size: 11px;
-    padding: 6px 14px;
-    width: 320px;
-    text-align: center;
-    backdrop-filter: blur(8px);
-  }
+    .wheel:hover {
+      transform: scale(1.02);
+    }
 
-  /* Responsive */
-  @media(max-width:460px){
-    .svg-wrap  { width: 94vw; }
-    .track-panel, .progress-wrap, .vol-wrap { width: 90vw; }
-  }
-</style>
+    .wheel:active,
+    .btn:active {
+      transform: scale(.96);
+    }
+
+    .center-button {
+      fill: rgba(255,255,255,.75);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .center-button:hover {
+      fill: white;
+    }
+
+    .btn {
+      fill: transparent;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    .gold {
+      fill: #a08f00;
+      stroke: rgba(255,255,255,.25);
+      stroke-width: 3;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.35));
+    }
+
+    .antenna {
+      stroke: #f5e4ef;
+      stroke-width: 10;
+      stroke-linecap: round;
+      filter: drop-shadow(0 4px 5px rgba(0,0,0,.4));
+    }
+
+    .antenna-tip {
+      fill: #d4d44b;
+      filter: drop-shadow(0 0 12px rgba(255,255,120,.5));
+    }
+
+    .screen-ui {
+      position: absolute;
+      left: 50%;
+      top: 170px;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 180px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #203040;
+    }
+
+    .track {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 1px rgba(255,255,255,.7);
+    }
+
+    .artist {
+      font-size: 14px;
+      opacity: .8;
+      margin-bottom: 24px;
+    }
+
+    .status {
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: .75;
+      margin-top: 16px;
+    }
+
+    .progress-wrap {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,.15);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.2);
+    }
+
+    .progress {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff69b4, #ff95cf);
+      transition: width .1s linear;
+    }
+
+    .visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      margin-top: 18px;
+      height: 30px;
+    }
+
+    .bar {
+      width: 7px;
+      background: linear-gradient(to top, #ff63b0, #ffffff);
+      border-radius: 10px;
+      animation: bounce 1s infinite ease-in-out;
+      opacity: .9;
+    }
+
+    .bar:nth-child(2) { animation-delay: .1s; }
+    .bar:nth-child(3) { animation-delay: .2s; }
+    .bar:nth-child(4) { animation-delay: .3s; }
+    .bar:nth-child(5) { animation-delay: .4s; }
+
+    @keyframes bounce {
+      0%,100% { height: 10px; }
+      50% { height: 28px; }
+    }
+
+    .credits {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 600px) {
+      .player {
+        width: 92vw;
+        height: auto;
+      }
+
+      .screen-ui {
+        top: 35%;
+        width: 50%;
+      }
+
+      .track {
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="bg"></div>
+  <div class="glow"></div>
 
-<div class="widget-wrap" id="widget">
+  <div class="player">
 
-  <!-- Track info -->
-  <div class="track-panel">
-    <div class="track-title"  id="trackTitle">Butterfly</div>
-    <div class="track-artist" id="trackArtist">Smile.dk</div>
-  </div>
-
-  <!-- Progress -->
-  <div class="progress-wrap">
-    <span class="time-label"       id="timeCur">0:00</span>
-    <div  class="progress-track"   id="progressTrack">
-      <div class="progress-fill"   id="progressFill" style="width:0%"></div>
-    </div>
-    <span class="time-label right" id="timeTot">0:00</span>
-  </div>
-
-  <!-- SVG skin -->
-  <div class="svg-wrap" id="svgWrap">
-    <svg id="butterfly-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 595 510">
+    <svg viewBox="0 0 595 760">
       <defs>
-        <!-- Wing gradient – translucent pinkish -->
-        <radialGradient id="wing-grad" cx="50%" cy="40%" r="60%" gradientUnits="objectBoundingBox">
-          <stop offset="0"   stop-color="#ff9ed0" stop-opacity=".6"/>
-          <stop offset=".55" stop-color="#c0407a" stop-opacity=".42"/>
-          <stop offset="1"   stop-color="#5a0030" stop-opacity=".22"/>
-        </radialGradient>
-        <!-- Body gradient -->
-        <linearGradient id="body-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0"   stop-color="#fce8f5"/>
-          <stop offset=".4"  stop-color="#f1d0e8"/>
-          <stop offset="1"   stop-color="#d0a0c0"/>
+
+        <linearGradient id="bodyGradient" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#fff7fc" />
+          <stop offset="45%" stop-color="#f6e8f1" />
+          <stop offset="100%" stop-color="#e7d9e2" />
         </linearGradient>
-        <!-- Dial gradient -->
-        <radialGradient id="dial-grad" cx="42%" cy="38%" r="58%">
-          <stop offset="0"   stop-color="#ff80c0"/>
-          <stop offset=".5"  stop-color="#ef60a3"/>
-          <stop offset="1"   stop-color="#a02060"/>
-        </radialGradient>
-        <!-- Center button gradient -->
-        <radialGradient id="center-grad" cx="38%" cy="32%" r="62%">
-          <stop offset="0"   stop-color="#fce0f0"/>
-          <stop offset=".7"  stop-color="#e8b8d8"/>
-          <stop offset="1"   stop-color="#c090b0"/>
-        </radialGradient>
-        <!-- Screen gradient -->
-        <linearGradient id="screen-grad" x1="0" y1="0" x2=".3" y2="1">
-          <stop offset="0"   stop-color="#d8eef8"/>
-          <stop offset=".5"  stop-color="#b8d8ee"/>
-          <stop offset="1"   stop-color="#88b8d8"/>
+
+        <linearGradient id="wheelGradient" x1="0" x2="1">
+          <stop offset="0%" stop-color="#ff7fbd" />
+          <stop offset="100%" stop-color="#ea4f97" />
         </linearGradient>
-        <!-- Gold dot gradient -->
-        <radialGradient id="gold-grad" cx="38%" cy="30%" r="70%">
-          <stop offset="0"  stop-color="#ffe84d"/>
-          <stop offset=".6" stop-color="#c8b400"/>
-          <stop offset="1"  stop-color="#7a6800"/>
-        </radialGradient>
-        <!-- Filters -->
-        <filter id="bevel" x="-5%" y="-5%" width="110%" height="110%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-          <feOffset dx="2" dy="3" result="shadow"/>
-          <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+
+        <linearGradient id="screenGradient" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#effaff" />
+          <stop offset="100%" stop-color="#b8d7e7" />
+        </linearGradient>
+
+        <linearGradient id="wingGradient" x1="0" x2="1">
+          <stop offset="0%" stop-color="#5f123e" />
+          <stop offset="100%" stop-color="#7f2a5d" />
+        </linearGradient>
+
+        <filter id="bodyShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="18" stdDeviation="18" flood-opacity=".45" />
         </filter>
-        <filter id="body-shadow" x="-10%" y="-5%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(80,0,40,.55)"/>
+
+        <filter id="wingShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#ff7bc0" flood-opacity=".25" />
         </filter>
-        <filter id="wing-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+
+        <filter id="screenGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#ffffff" flood-opacity=".4" />
         </filter>
-        <filter id="btn-shadow">
-          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(120,0,60,.4)"/>
-        </filter>
+
       </defs>
 
-      <!-- Antennas -->
-      <polygon style="fill:#e8d0e0;stroke:#c0a0b8;stroke-width:.8;stroke-miterlimit:10;" points="355.88 139.14 366.2 140.96 385.15 32.31 374.82 30.5 355.88 139.14"/>
-      <polygon style="fill:#e8d0e0;stroke:#c0a0b8;stroke-width:.8;stroke-miterlimit:10;" points="244.25 139.14 233.93 140.96 214.98 32.31 225.3 30.5 244.25 139.14"/>
+      <!-- ANTENNAS -->
+      <line class="antenna" x1="240" y1="135" x2="220" y2="40" />
+      <line class="antenna" x1="355" y1="135" x2="375" y2="40" />
 
-      <!-- Antenna tips -->
-      <ellipse cx="219.77" cy="29.3" rx="13.87" ry="13.93" style="fill:url(#gold-grad);stroke:#a08000;stroke-width:.5;filter:url(#bevel)"/>
-      <ellipse cx="380.35" cy="29.3" rx="13.87" ry="13.93" style="fill:url(#gold-grad);stroke:#a08000;stroke-width:.5;filter:url(#bevel)"/>
+      <circle class="antenna-tip" cx="220" cy="36" r="18" />
+      <circle class="antenna-tip" cx="375" cy="36" r="18" />
 
-      <!-- Left wings -->
-      <g id="left-wings" style="filter:url(#wing-glow)">
-        <ellipse cx="144.66" cy="369.19" rx="72.45" ry="57.32" transform="translate(-237.14 262.15) rotate(-52.94)"
-          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
-        <ellipse cx="131.99" cy="222.62" rx="69.71" ry="115.94" transform="translate(-105.27 119.23) rotate(-35.79)"
-          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+      <!-- WINGS -->
+
+      <g class="left-wing-group">
+        <ellipse class="wing" cx="128" cy="235" rx="90" ry="140" transform="rotate(-35 128 235)" />
+        <ellipse class="wing" cx="125" cy="450" rx="75" ry="95" transform="rotate(-45 125 450)" />
+
+        <ellipse class="wing-inner" cx="145" cy="225" rx="45" ry="80" transform="rotate(-35 145 225)" />
+
+        <circle class="gold" cx="80" cy="205" r="18" />
+        <circle class="gold" cx="108" cy="260" r="12" />
+        <circle class="gold" cx="140" cy="510" r="24" />
       </g>
 
-      <!-- Right wings -->
-      <g id="right-wings" style="filter:url(#wing-glow)">
-        <ellipse cx="446.13" cy="372.44" rx="57.32" ry="72.45" transform="translate(-134.33 344.07) rotate(-37.06)"
-          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
-        <ellipse cx="458.8"  cy="225.87" rx="115.94" ry="69.71" transform="translate(7.27 465.94) rotate(-54.21)"
-          style="fill:url(#wing-grad);stroke:rgba(239,96,163,.7);stroke-width:1.5;stroke-miterlimit:10;opacity:.82"/>
+      <g class="right-wing-group">
+        <ellipse class="wing" cx="470" cy="235" rx="90" ry="140" transform="rotate(35 470 235)" />
+        <ellipse class="wing" cx="470" cy="450" rx="75" ry="95" transform="rotate(45 470 450)" />
+
+        <ellipse class="wing-inner" cx="455" cy="225" rx="45" ry="80" transform="rotate(35 455 225)" />
+
+        <circle class="gold" cx="515" cy="205" r="18" />
+        <circle class="gold" cx="488" cy="260" r="12" />
+        <circle class="gold" cx="455" cy="510" r="24" />
       </g>
 
-      <!-- Left wing decorations -->
-      <path style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;" d="M84.65,168.41c4.88,4.91,4.88,12.86,0,17.76-4.88,4.91-12.81,4.91-17.69,0s-4.88-12.86,0-17.76,12.81-4.91,17.69,0Z"/>
-      <ellipse cx="93.5"  cy="210.56" rx="9.25"  ry="9.29"  style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;"/>
-      <ellipse cx="134.8" cy="386.43" rx="22.55" ry="22.64" style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;filter:url(#bevel)"/>
+      <!-- IPOD BODY -->
 
-      <!-- Right wing decorations -->
-      <path style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;" d="M507.34,174.42c-4.88,4.91-4.88,12.86,0,17.76s12.81,4.91,17.69,0,4.88-12.86,0-17.76-12.81-4.91-17.69,0Z"/>
-      <ellipse cx="498.5" cy="216.58" rx="9.25"  ry="9.29"  style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;"/>
-      <ellipse cx="458.8" cy="386.43" rx="22.55" ry="22.64" style="fill:url(#gold-grad);stroke:#7a6800;stroke-width:.5;filter:url(#bevel)"/>
+      <rect class="body" x="170" y="120" width="255" height="500" rx="65" />
 
-      <!-- iPod body -->
-      <rect id="ipod-body" x="191.84" y="120.09" width="208.32" height="366.65" rx="60" ry="60"
-        style="fill:url(#body-grad);stroke:#c8a0c0;stroke-width:1.5;stroke-miterlimit:10;filter:url(#body-shadow)"/>
-      <!-- Body inner highlight -->
-      <rect x="200" y="128" width="192" height="350" rx="55" ry="55"
-        style="fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.5;stroke-miterlimit:10;pointer-events:none"/>
+      <!-- SCREEN -->
 
-      <!-- Screen -->
-      <rect x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"
-        style="fill:url(#screen-grad);stroke:#88b0d0;stroke-width:1.5;stroke-miterlimit:10;filter:url(#bevel)"/>
-      <!-- Screen glare -->
-      <rect x="228" y="162" width="58" height="28" rx="13"
-        style="fill:rgba(255,255,255,.28);pointer-events:none"/>
+      <rect class="screen" x="205" y="165" width="185" height="165" rx="28" />
 
-      <!-- MENU text -->
-      <text style="fill:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;"
-        transform="translate(268 342)">MENU</text>
+      <!-- CLICK WHEEL -->
 
-      <!-- Dial background -->
-      <ellipse id="dial-bg" cx="296" cy="392.26" rx="80.32" ry="80.65"
-        style="fill:url(#dial-grad);stroke:#a02060;stroke-width:1.5;stroke-miterlimit:10;filter:url(#bevel);cursor:pointer"/>
-      <!-- Dial inner highlight ring -->
-      <ellipse cx="294" cy="390" rx="78" ry="78"
-        style="fill:none;stroke:rgba(255,160,210,.28);stroke-width:1;pointer-events:none"/>
+      <circle class="wheel" cx="298" cy="470" r="78" />
+      <circle class="center-button" id="playPause" cx="298" cy="470" r="28" />
 
-      <!-- Center button -->
-      <ellipse id="center-btn" cx="296" cy="392.26" rx="27.75" ry="27.86"
-        style="fill:url(#center-grad);stroke:#c090b0;stroke-width:1.5;stroke-miterlimit:10;cursor:pointer;filter:url(#bevel)"/>
-      <ellipse cx="290" cy="386" rx="14" ry="9"
-        style="fill:rgba(255,255,255,.32);pointer-events:none"/>
+      <!-- MENU TEXT -->
+      <text x="298" y="418" text-anchor="middle" fill="white" font-size="16" font-weight="bold">MENU</text>
 
-      <!-- Prev button ◀◀ -->
-      <polygon id="btn-prev"
-        points="253.55 369.23 253.55 401.23 227.87 385.23 253.55 369.23"
-        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+      <!-- ICONS -->
+      <polygon points="245,470 268,455 268,485" fill="white" />
+      <polygon points="352,470 329,455 329,485" fill="white" />
 
-      <!-- Next button ▶▶ -->
-      <polygon id="btn-next"
-        points="338.45 369.23 338.45 401.23 364.13 385.23 338.45 369.23"
-        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+      <polygon points="292,520 292,495 317,508" fill="white" />
+      <rect x="320" y="495" width="6" height="25" rx="3" fill="white" />
+      <rect x="331" y="495" width="6" height="25" rx="3" fill="white" />
 
-      <!-- Play triangle ▶ -->
-      <polygon id="btn-play-tri"
-        points="278.62 428.69 278.62 452.24 295.44 440.46 278.62 428.69"
-        style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round;cursor:pointer;filter:url(#btn-shadow)"/>
+      <!-- CLICK AREAS -->
+      <circle class="btn" id="prevBtn" cx="245" cy="470" r="40" />
+      <circle class="btn" id="nextBtn" cx="352" cy="470" r="40" />
+      <circle class="btn" id="pauseBtn" cx="312" cy="507" r="35" />
 
-      <!-- Pause bars ⏸ -->
-      <g id="btn-pause-bars" style="cursor:pointer;filter:url(#btn-shadow)">
-        <rect x="301.24" y="431.37" width="4.58" height="18.18" style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round"/>
-        <rect x="312.09" y="431.37" width="4.58" height="18.18" style="fill:#f0d8e8;stroke:#c090b0;stroke-width:1;stroke-miterlimit:10;stroke-linecap:round"/>
-      </g>
     </svg>
 
-    <!-- Screen overlay -->
-    <div class="screen-overlay">
-      <img class="screen-art" id="screenArt" src="song 1 picture.jpeg" alt="Butterfly"/>
-      <div class="screen-label" id="screenLabel">Butterfly</div>
+    <div class="screen-ui">
+      <div class="track" id="trackName">Butterfly Dreams</div>
+      <div class="artist" id="artistName">Custom iPod Widget</div>
+
+      <div class="progress-wrap">
+        <div class="progress" id="progress"></div>
+      </div>
+
+      <div class="visualizer" id="visualizer">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+
+      <div class="status" id="statusText">Paused</div>
+    </div>
+
+    <div class="credits">
+      BUTTERFLY POD
     </div>
   </div>
 
-  <!-- Audio error notice -->
-  <div id="audio-error">⚠️ Audio file not found — check filenames match exactly</div>
+  <!-- Replace these with your own MP3 files -->
+  <audio id="audio"></audio>
 
-  <!-- Volume -->
-  <div class="vol-wrap">
-    <span class="vol-icon">🔈</span>
-    <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" style="--vol:80%"/>
-    <span class="vol-icon">🔊</span>
-  </div>
+  <script>
 
-  <div class="footer">Butterfly Pod</div>
-</div>
+    const songs = [
+      {
+        title: 'Butterfly Dreams',
+        artist: 'Pink Crystal',
+        src: 'songs/song1.mp3'
+      },
+      {
+        title: 'Velvet Wings',
+        artist: 'Moon Garden',
+        src: 'songs/song2.mp3'
+      },
+      {
+        title: 'Cherry Glow',
+        artist: 'Sky Nectar',
+        src: 'songs/song3.mp3'
+      }
+    ];
 
-<script>
-// ── Playlist ──────────────────────────────────────────────────────────────────
-const tracks = [
-  { title: "Butterfly",          artist: "Smile.dk",        pic: "song 1 picture.jpeg", src: "song 1.mp3" },
-  { title: "One More Time",      artist: "Britney Spears",   pic: "song 2 picture.png",  src: "song 2.mp3" },
-  { title: "I Want It That Way", artist: "Backstreet Boys",  pic: "song 3 picture.jpg",  src: "song 3.mp3" },
-];
+    let currentSong = 0;
+    let isPlaying = false;
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let idx     = 0;
-let playing = false;
+    const audio = document.getElementById('audio');
+    const trackName = document.getElementById('trackName');
+    const artistName = document.getElementById('artistName');
+    const progress = document.getElementById('progress');
+    const statusText = document.getElementById('statusText');
 
-// ── Audio ─────────────────────────────────────────────────────────────────────
-const audio = new Audio();
-audio.volume = 0.8;
-audio.preload = "metadata";
+    const playPauseBtn = document.getElementById('playPause');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const widget    = document.getElementById('widget');
-const titleEl   = document.getElementById('trackTitle');
-const artistEl  = document.getElementById('trackArtist');
-const fillEl    = document.getElementById('progressFill');
-const curEl     = document.getElementById('timeCur');
-const totEl     = document.getElementById('timeTot');
-const artEl     = document.getElementById('screenArt');
-const lblEl     = document.getElementById('screenLabel');
-const errEl     = document.getElementById('audio-error');
-const volSlider = document.getElementById('volSlider');
+    function loadSong(index) {
+      const song = songs[index];
+      audio.src = song.src;
+      trackName.textContent = song.title;
+      artistName.textContent = song.artist;
+    }
 
-function fmt(s) {
-  if (isNaN(s) || !isFinite(s)) return '0:00';
-  const m = Math.floor(s / 60), ss = Math.floor(s % 60);
-  return `${m}:${ss.toString().padStart(2,'0')}`;
-}
+    function playSong() {
+      audio.play();
+      isPlaying = true;
+      statusText.textContent = 'Playing';
+      document.querySelector('.player').style.transform = 'scale(1.01)';
+    }
 
-// ── Load track ────────────────────────────────────────────────────────────────
-function loadTrack(i, autoPlay = false) {
-  idx = (i + tracks.length) % tracks.length;
-  const t = tracks[idx];
+    function pauseSong() {
+      audio.pause();
+      isPlaying = false;
+      statusText.textContent = 'Paused';
+      document.querySelector('.player').style.transform = 'scale(1)';
+    }
 
-  audio.src = t.src;
-  titleEl.textContent  = t.title;
-  artistEl.textContent = t.artist;
-  artEl.src            = t.pic;
-  artEl.alt            = t.title;
-  lblEl.textContent    = t.title;
-  fillEl.style.width   = '0%';
-  curEl.textContent    = '0:00';
-  totEl.textContent    = '0:00';
-  errEl.style.display  = 'none';
+    function togglePlay() {
+      if (isPlaying) {
+        pauseSong();
+      } else {
+        playSong();
+      }
+    }
 
-  if (autoPlay) {
-    audio.play().catch(showError);
-  } else {
-    stopVisuals();
-  }
-}
+    function nextSong() {
+      currentSong++;
 
-function showError(err) {
-  console.warn('Audio error:', err);
-  errEl.style.display = 'block';
-  stopVisuals();
-}
+      if (currentSong >= songs.length) {
+        currentSong = 0;
+      }
 
-// ── Playback controls ─────────────────────────────────────────────────────────
-function startVisuals() {
-  playing = true;
-  widget.classList.add('playing');
-}
-function stopVisuals() {
-  playing = false;
-  widget.classList.remove('playing');
-}
+      loadSong(currentSong);
 
-function togglePlay() {
-  if (audio.paused) {
-    audio.play().catch(showError);
-  } else {
-    audio.pause();
-  }
-  ripple();
-}
+      if (isPlaying) {
+        playSong();
+      }
+    }
 
-// Sync visuals with audio events
-audio.addEventListener('play',  () => { startVisuals(); });
-audio.addEventListener('pause', () => { stopVisuals(); });
-audio.addEventListener('ended', () => { loadTrack(idx + 1, true); });
-audio.addEventListener('error', () => { showError('file not found'); });
+    function prevSong() {
+      currentSong--;
 
-// Progress sync
-audio.addEventListener('timeupdate', () => {
-  if (!audio.duration) return;
-  const pct = (audio.currentTime / audio.duration) * 100;
-  fillEl.style.width = pct.toFixed(2) + '%';
-  curEl.textContent  = fmt(audio.currentTime);
-});
-audio.addEventListener('durationchange', () => {
-  totEl.textContent = fmt(audio.duration);
-});
+      if (currentSong < 0) {
+        currentSong = songs.length - 1;
+      }
 
-// ── Button wiring ─────────────────────────────────────────────────────────────
-document.getElementById('btn-prev').addEventListener('click', () => {
-  // Restart if >3s in, else go previous
-  if (audio.currentTime > 3) {
-    audio.currentTime = 0;
-  } else {
-    loadTrack(idx - 1, playing);
-  }
-  flash('btn-prev');
-});
+      loadSong(currentSong);
 
-document.getElementById('btn-next').addEventListener('click', () => {
-  loadTrack(idx + 1, playing);
-  flash('btn-next');
-});
+      if (isPlaying) {
+        playSong();
+      }
+    }
 
-document.getElementById('btn-play-tri').addEventListener('click',   togglePlay);
-document.getElementById('btn-pause-bars').addEventListener('click', togglePlay);
-document.getElementById('center-btn').addEventListener('click',     togglePlay);
+    playPauseBtn.addEventListener('click', togglePlay);
+    pauseBtn.addEventListener('click', togglePlay);
+    nextBtn.addEventListener('click', nextSong);
+    prevBtn.addEventListener('click', prevSong);
 
-// Dial outer ring = next track shortcut
-document.getElementById('dial-bg').addEventListener('click', (e) => {
-  const svgEl  = document.getElementById('butterfly-svg');
-  const cx = 296, cy = 392.26;
-  const rect   = svgEl.getBoundingClientRect();
-  const scaleX = 595 / rect.width, scaleY = 510 / rect.height;
-  const svgX   = (e.clientX - rect.left) * scaleX;
-  const svgY   = (e.clientY - rect.top)  * scaleY;
-  const d      = Math.hypot(svgX - cx, svgY - cy);
-  if (d > 28) { loadTrack(idx + 1, playing); flash('dial-bg'); }
-});
+    audio.addEventListener('timeupdate', () => {
 
-// Progress bar seek
-document.getElementById('progressTrack').addEventListener('click', (e) => {
-  if (!audio.duration) return;
-  const r    = e.currentTarget.getBoundingClientRect();
-  const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-  audio.currentTime = frac * audio.duration;
-});
+      if (!audio.duration) return;
 
-// Volume
-volSlider.addEventListener('input', function () {
-  audio.volume = this.value / 100;
-  this.style.setProperty('--vol', this.value + '%');
-});
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progress.style.width = percent + '%';
+    });
 
-// ── Visual feedback ───────────────────────────────────────────────────────────
-function flash(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.transition = 'opacity .1s';
-  el.style.opacity    = '.35';
-  setTimeout(() => { el.style.opacity = ''; }, 160);
-}
+    audio.addEventListener('ended', () => {
+      nextSong();
+      playSong();
+    });
 
-function ripple() {
-  const wrap  = document.getElementById('svgWrap');
-  const d     = document.createElement('div');
-  d.className = 'ripple';
-  const wRect = wrap.getBoundingClientRect();
-  const scale = wRect.width / 595;
-  d.style.left = (296 * scale) + 'px';
-  d.style.top  = ((392.26 / 510) * wRect.height) + 'px';
-  wrap.appendChild(d);
-  setTimeout(() => d.remove(), 600);
-}
+    // subtle wing movement
 
-// Wing flutter on hover
-['left-wings','right-wings'].forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.addEventListener('mouseenter', () => {
-    el.style.transform  = 'scale(1.05)';
-    el.style.transition = 'transform .2s ease';
-    setTimeout(() => { el.style.transform = ''; }, 280);
-  });
-});
+    setInterval(() => {
+      document.querySelector('.left-wing-group').style.transform =
+        `rotate(${Math.sin(Date.now() / 600) * 2}deg)`;
 
-// ── Keyboard shortcuts ────────────────────────────────────────────────────────
-document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
-  if (e.code === 'Space')       { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowRight')  { loadTrack(idx + 1, playing); }
-  if (e.code === 'ArrowLeft')   { loadTrack(idx - 1, playing); }
-  if (e.code === 'ArrowUp')     { volSlider.value = Math.min(100, +volSlider.value + 10); volSlider.dispatchEvent(new Event('input')); }
-  if (e.code === 'ArrowDown')   { volSlider.value = Math.max(0,   +volSlider.value - 10); volSlider.dispatchEvent(new Event('input')); }
-});
+      document.querySelector('.right-wing-group').style.transform =
+        `rotate(${Math.sin(Date.now() / 600) * -2}deg)`;
+    }, 30);
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadTrack(0, false);
-</script>
+    loadSong(currentSong);
+
+  </script>
+
 </body>
 </html>
+```
+
+* Add local file uploads.
+* Add Web Audio API reactive wings.
