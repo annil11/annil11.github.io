@@ -1,637 +1,649 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Butterfly iPod</title>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Futura:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-  body {
-    background: #0a0a0a;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DM Sans', sans-serif;
-    overflow: hidden;
-    position: relative;
-  }
+body{
+  background:#050505;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  font-family:'DM Sans',sans-serif;
+  position:relative;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(239,96,163,0.12) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(239,96,163,0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(239,96,163,.15), transparent 35%),
+    radial-gradient(circle at 80% 50%, rgba(239,96,163,.1), transparent 35%);
+  pointer-events:none;
+}
 
-  .scene {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
-  }
+.scene{
+  position:relative;
+}
 
-  .player-wrap {
-    position: relative;
-    width: 595px;
-    height: 510px;
-    filter: drop-shadow(0 30px 60px rgba(239,96,163,0.35)) drop-shadow(0 10px 30px rgba(0,0,0,0.7));
-    transition: filter 0.3s ease;
-  }
-  .player-wrap:hover {
-    filter: drop-shadow(0 36px 72px rgba(239,96,163,0.45)) drop-shadow(0 14px 40px rgba(0,0,0,0.75));
-  }
+.player-wrap{
+  width:595px;
+  height:510px;
+  position:relative;
+  filter:
+    drop-shadow(0 25px 40px rgba(239,96,163,.35))
+    drop-shadow(0 10px 30px rgba(0,0,0,.8));
+}
 
-  /* ── Info panel ── */
-  .info-panel {
-    text-align: center;
-    color: #fff;
-    max-width: 340px;
-  }
-  .track-title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    color: #fff;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .track-artist {
-    font-size: 13px;
-    color: rgba(239,96,163,0.85);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .progress-bar-wrap {
-    margin-top: 10px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-    height: 4px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ef60a3, #f9b4d6);
-    border-radius: 4px;
-    transition: width 0.4s linear;
-    width: 0%;
-  }
-  .time-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: rgba(255,255,255,0.45);
-    margin-top: 4px;
+.music-note{
+  position:absolute;
+  color:#ffd1e6;
+  font-size:24px;
+  pointer-events:none;
+  animation:floatNote 2.5s ease-out forwards;
+  text-shadow:0 0 12px rgba(255,255,255,.7);
+  z-index:9999;
+}
+
+@keyframes floatNote{
+  0%{
+    opacity:0;
+    transform:translate(0,0) scale(.4) rotate(0deg);
   }
 
-  /* ── SVG interactive zones ── */
-  .btn-zone {
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .btn-zone:hover { opacity: 0.75; }
-  .btn-zone:active { opacity: 0.5; transform: scale(0.97); }
-
-  /* ── Screen content ── */
-  #screen-content {
-    transition: opacity 0.3s;
+  20%{
+    opacity:1;
   }
 
-  /* ── Pulse ring on play ── */
-  @keyframes pulseRing {
-    0%   { r: 80; opacity: 0.6; }
-    100% { r: 110; opacity: 0; }
+  100%{
+    opacity:0;
+    transform:
+      translate(var(--nx),var(--ny))
+      scale(1.4)
+      rotate(40deg);
   }
-  .pulse-ring {
-    animation: pulseRing 1.2s ease-out infinite;
-    display: none;
-  }
-  .playing .pulse-ring { display: block; }
+}
 
-  /* ── Wing shimmer ── */
-  @keyframes wingShimmer {
-    0%,100% { opacity: 0.82; }
-    50% { opacity: 0.95; }
-  }
-  .wing-group { animation: wingShimmer 3s ease-in-out infinite; }
-  .wing-group-r { animation: wingShimmer 3s ease-in-out infinite 1.5s; }
+.info-panel{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-120px;
+  width:340px;
+  text-align:center;
+  color:white;
+}
 
-  /* ── Antenna bounce ── */
-  @keyframes antennaBounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-  .antenna-tip { animation: antennaBounce 2.5s ease-in-out infinite; }
-  .antenna-tip-r { animation: antennaBounce 2.5s ease-in-out infinite 1.25s; }
+.track-title{
+  font-size:18px;
+  font-weight:700;
+}
 
-  /* ── Note float ── */
-  @keyframes noteFloat {
-    0% { opacity: 0; transform: translate(0,0) scale(0.5); }
-    30% { opacity: 1; }
-    100% { opacity: 0; transform: translate(var(--nx), var(--ny)) scale(1.2); }
-  }
-  .music-note {
-    font-size: 18px;
-    position: absolute;
-    animation: noteFloat 2.2s ease-out forwards;
-    pointer-events: none;
-    color: rgba(249,180,214,0.9);
-  }
+.track-artist{
+  font-size:13px;
+  color:#ef60a3;
+  margin-top:4px;
+}
+
+.progress-wrap{
+  width:100%;
+  height:5px;
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  margin-top:12px;
+  overflow:hidden;
+}
+
+.progress{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#ef60a3,#ffd4ea);
+  transition:width .2s linear;
+}
+
+.time-row{
+  margin-top:6px;
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:rgba(255,255,255,.5);
+}
+
+.btn-zone{
+  cursor:pointer;
+}
+
+#eqBars{
+  opacity:0;
+  transition:opacity .2s;
+}
+
+.playing #eqBars{
+  opacity:1;
+}
+
+.playing #screenPlay{
+  opacity:0;
+}
+
+@keyframes eq{
+  0%,100%{height:6px;}
+  50%{height:18px;}
+}
+
+.eq{
+  animation:eq .7s infinite ease-in-out;
+}
+
+.eq:nth-child(2){animation-delay:.1s;}
+.eq:nth-child(3){animation-delay:.2s;}
+.eq:nth-child(4){animation-delay:.3s;}
+.eq:nth-child(5){animation-delay:.4s;}
+.eq:nth-child(6){animation-delay:.5s;}
+
 </style>
 </head>
+
 <body>
+
 <div class="scene">
-  <div class="player-wrap" id="playerWrap">
-    <svg id="butterflySVG" viewBox="0 0 595 510" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="595" height="510">
-      <defs>
-        <!-- Body gradient -->
-        <radialGradient id="bodyGrad" cx="45%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#fde8f4"/>
-          <stop offset="55%" stop-color="#f5c9e3"/>
-          <stop offset="100%" stop-color="#e8a6ce"/>
-        </radialGradient>
-        <!-- Body bevel highlight -->
-        <linearGradient id="bodyHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fff" stop-opacity="0.6"/>
-          <stop offset="40%" stop-color="#fff" stop-opacity="0.1"/>
-          <stop offset="100%" stop-color="#c070a0" stop-opacity="0.3"/>
-        </linearGradient>
-        <!-- Screen gradient -->
-        <linearGradient id="screenGrad" x1="0%" y1="0%" x2="60%" y2="100%">
-          <stop offset="0%" stop-color="#e8f6ff"/>
-          <stop offset="40%" stop-color="#c4e1ef"/>
-          <stop offset="100%" stop-color="#a0c8e0"/>
-        </linearGradient>
-        <!-- Screen glare -->
-        <linearGradient id="screenGlare" x1="0%" y1="0%" x2="30%" y2="100%">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7"/>
-          <stop offset="50%" stop-color="#ffffff" stop-opacity="0.1"/>
-          <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-        </linearGradient>
-        <!-- Wing left top -->
-        <radialGradient id="wingLT" cx="60%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#d4457a" stop-opacity="0.6"/>
-          <stop offset="60%" stop-color="#a3285a" stop-opacity="0.75"/>
-          <stop offset="100%" stop-color="#7b1840" stop-opacity="0.85"/>
-        </radialGradient>
-        <!-- Wing left bottom -->
-        <radialGradient id="wingLB" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stop-color="#c84070" stop-opacity="0.65"/>
-          <stop offset="100%" stop-color="#8a1e48" stop-opacity="0.82"/>
-        </radialGradient>
-        <!-- Wing right top -->
-        <radialGradient id="wingRT" cx="40%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#d4457a" stop-opacity="0.6"/>
-          <stop offset="60%" stop-color="#a3285a" stop-opacity="0.75"/>
-          <stop offset="100%" stop-color="#7b1840" stop-opacity="0.85"/>
-        </radialGradient>
-        <!-- Wing right bottom -->
-        <radialGradient id="wingRB" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stop-color="#c84070" stop-opacity="0.65"/>
-          <stop offset="100%" stop-color="#8a1e48" stop-opacity="0.82"/>
-        </radialGradient>
-        <!-- Wheel gradient -->
-        <radialGradient id="wheelGrad" cx="38%" cy="32%" r="65%">
-          <stop offset="0%" stop-color="#f890c0"/>
-          <stop offset="50%" stop-color="#ef60a3"/>
-          <stop offset="100%" stop-color="#c03070"/>
-        </radialGradient>
-        <!-- Wheel glare -->
-        <radialGradient id="wheelGlare" cx="35%" cy="28%" r="45%">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-        </radialGradient>
-        <!-- Center button -->
-        <radialGradient id="centerGrad" cx="38%" cy="32%" r="65%">
-          <stop offset="0%" stop-color="#fde8f4"/>
-          <stop offset="60%" stop-color="#f5c9e3"/>
-          <stop offset="100%" stop-color="#d8a0c0"/>
-        </radialGradient>
-        <!-- Yellow dot gradient -->
-        <radialGradient id="yellowGrad" cx="35%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="#e8e060"/>
-          <stop offset="50%" stop-color="#c8c030"/>
-          <stop offset="100%" stop-color="#a09810"/>
-        </radialGradient>
-        <!-- Lime/olive dot -->
-        <radialGradient id="oliveGrad" cx="35%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="#d8d840"/>
-          <stop offset="50%" stop-color="#b8b818"/>
-          <stop offset="100%" stop-color="#909010"/>
-        </radialGradient>
-        <!-- Antenna gradient -->
-        <linearGradient id="antennaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#e8d0e0"/>
-          <stop offset="50%" stop-color="#f0e0ec"/>
-          <stop offset="100%" stop-color="#c8b0c8"/>
-        </linearGradient>
-        <!-- Drop shadow filter for body -->
-        <filter id="bodyShadow" x="-10%" y="-5%" width="120%" height="115%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#a03060" flood-opacity="0.35"/>
-        </filter>
-        <!-- Bevel filter -->
-        <filter id="bevel" x="-5%" y="-5%" width="110%" height="110%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-          <feOffset dx="-2" dy="-2" result="offsetBlur"/>
-          <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
-        </filter>
-        <!-- Wing blur/translucency -->
-        <filter id="wingGlow" x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-        </filter>
-        <!-- Wheel shadow -->
-        <filter id="wheelShadow">
-          <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#901050" flood-opacity="0.4"/>
-        </filter>
-        <!-- Inner shadow filter -->
-        <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
-          <feOffset dx="2" dy="4"/>
-          <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff"/>
-          <feFlood flood-color="#802050" flood-opacity="0.3" result="color"/>
-          <feComposite in="color" in2="shadowDiff" operator="in" result="shadow"/>
-          <feComposite in="shadow" in2="SourceGraphic" operator="over"/>
-        </filter>
-        <!-- Clip path for screen content -->
-        <clipPath id="screenClip">
-          <rect x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"/>
-        </clipPath>
-      </defs>
 
-      <!-- ══ LEFT WING (back layer) ══ -->
-      <g class="wing-group" filter="url(#wingGlow)">
-        <!-- Left upper wing -->
-        <ellipse cx="131.99" cy="222.62" rx="69.71" ry="115.94"
-          transform="translate(-105.27 119.23) rotate(-35.79)"
-          fill="url(#wingLT)" stroke="#c03070" stroke-width="0.8" stroke-miterlimit="10"/>
-        <!-- Left lower wing -->
-        <ellipse cx="144.66" cy="369.19" rx="72.45" ry="57.32"
-          transform="translate(-237.14 262.15) rotate(-52.94)"
-          fill="url(#wingLB)" stroke="#b02860" stroke-width="0.8" stroke-miterlimit="10"/>
-        <!-- Wing sheen left -->
-        <ellipse cx="125" cy="210" rx="30" ry="55"
-          transform="rotate(-40, 125, 210)"
-          fill="rgba(255,255,255,0.06)" stroke="none"/>
-        <!-- Wing sheen left lower -->
-        <ellipse cx="138" cy="365" rx="28" ry="22"
-          transform="rotate(-55, 138, 365)"
-          fill="rgba(255,255,255,0.05)" stroke="none"/>
-      </g>
+<div class="player-wrap" id="playerWrap">
 
-      <!-- ══ RIGHT WING (back layer) ══ -->
-      <g class="wing-group-r" filter="url(#wingGlow)">
-        <!-- Right upper wing -->
-        <ellipse cx="458.8" cy="225.87" rx="115.94" ry="69.71"
-          transform="translate(7.27 465.94) rotate(-54.21)"
-          fill="url(#wingRT)" stroke="#c03070" stroke-width="0.8" stroke-miterlimit="10"/>
-        <!-- Right lower wing -->
-        <ellipse cx="446.13" cy="372.44" rx="57.32" ry="72.45"
-          transform="translate(-134.33 344.07) rotate(-37.06)"
-          fill="url(#wingRB)" stroke="#b02860" stroke-width="0.8" stroke-miterlimit="10"/>
-        <!-- Wing sheen right upper -->
-        <ellipse cx="468" cy="213" rx="30" ry="52"
-          transform="rotate(-60, 468, 213)"
-          fill="rgba(255,255,255,0.06)" stroke="none"/>
-        <!-- Wing sheen right lower -->
-        <ellipse cx="452" cy="368" rx="24" ry="28"
-          transform="rotate(-40, 452, 368)"
-          fill="rgba(255,255,255,0.05)" stroke="none"/>
-      </g>
+<svg viewBox="0 0 595 510" width="595" height="510">
 
-      <!-- Wing decoration dots — left -->
-      <circle cx="76.8" cy="177.29" r="9.5" fill="url(#oliveGrad)" stroke="#707010" stroke-width="0.5"/>
-      <circle cx="93.5" cy="210.56" r="9.25" fill="url(#oliveGrad)" stroke="#707010" stroke-width="0.5"/>
-      <circle cx="134.8" cy="386.43" r="22.55" fill="url(#oliveGrad)" stroke="#808020" stroke-width="0.8"/>
+<!-- LEFT WINGS -->
+<ellipse cx="132" cy="223" rx="70" ry="116"
+transform="rotate(-36 132 223)"
+fill="#7d1842"
+opacity=".85"
+stroke="#e2bfd0"
+stroke-width="6"/>
 
-      <!-- Wing decoration dots — right -->
-      <circle cx="515.69" cy="183.30" r="9.5" fill="url(#yellowGrad)" stroke="#808010" stroke-width="0.5"/>
-      <circle cx="498.5" cy="216.58" r="9.25" fill="url(#yellowGrad)" stroke="#808010" stroke-width="0.5"/>
-      <circle cx="458.8" cy="386.43" r="22.55" fill="url(#yellowGrad)" stroke="#909020" stroke-width="0.8"/>
+<ellipse cx="145" cy="369" rx="72" ry="57"
+transform="rotate(-53 145 369)"
+fill="#8d2150"
+opacity=".85"
+stroke="#e2bfd0"
+stroke-width="6"/>
 
-      <!-- ══ ANTENNAS ══ -->
-      <!-- Left antenna -->
-      <polygon points="244.25 139.14 233.93 140.96 214.98 32.31 225.30 30.5"
-        fill="url(#antennaGrad)" stroke="#d8c0d8" stroke-width="0.5" stroke-miterlimit="10"/>
-      <!-- Right antenna -->
-      <polygon points="355.88 139.14 366.20 140.96 385.15 32.31 374.82 30.5"
-        fill="url(#antennaGrad)" stroke="#d8c0d8" stroke-width="0.5" stroke-miterlimit="10"/>
-      <!-- Antenna tips -->
-      <g class="antenna-tip">
-        <circle cx="219.77" cy="29.3" r="13.87" fill="url(#oliveGrad)" stroke="#808010" stroke-width="0.5"/>
-        <circle cx="219.77" cy="26" r="5" fill="rgba(255,255,255,0.4)" stroke="none"/>
-      </g>
-      <g class="antenna-tip-r">
-        <circle cx="380.35" cy="29.3" r="13.87" fill="url(#yellowGrad)" stroke="#909010" stroke-width="0.5"/>
-        <circle cx="380.35" cy="26" r="5" fill="rgba(255,255,255,0.4)" stroke="none"/>
-      </g>
+<!-- RIGHT WINGS -->
+<ellipse cx="459" cy="226" rx="116" ry="70"
+transform="rotate(-54 459 226)"
+fill="#7d1842"
+opacity=".85"
+stroke="#e2bfd0"
+stroke-width="6"/>
 
-      <!-- ══ IPOD BODY ══ -->
-      <!-- Outer shadow/depth ring -->
-      <rect x="189" y="117" width="214" height="373" rx="62" ry="62"
-        fill="rgba(160,60,100,0.25)" filter="url(#bodyShadow)"/>
-      <!-- Main body -->
-      <rect id="ipodBody" x="191.84" y="120.09" width="208.32" height="366.65" rx="60" ry="60"
-        fill="url(#bodyGrad)" stroke="#d890c0" stroke-width="1.2"/>
-      <!-- Body highlight overlay (bevel effect) -->
-      <rect x="191.84" y="120.09" width="208.32" height="366.65" rx="60" ry="60"
-        fill="url(#bodyHighlight)" stroke="none"/>
-      <!-- Body bottom shadow -->
-      <rect x="191.84" y="350" width="208.32" height="137" rx="0" ry="0"
-        fill="rgba(160,60,100,0.08)" stroke="none"/>
-      <rect x="191.84" y="350" width="208.32" height="137" rx="0" ry="0"
-        fill="rgba(160,60,100,0.08)" stroke="none" clip-path="url(#bodyBottomClip)"/>
+<ellipse cx="446" cy="372" rx="57" ry="72"
+transform="rotate(-37 446 372)"
+fill="#8d2150"
+opacity=".85"
+stroke="#e2bfd0"
+stroke-width="6"/>
 
-      <!-- ══ SCREEN ══ -->
-      <!-- Screen bezel/shadow -->
-      <rect x="217" y="154" width="158" height="147" rx="32" ry="32"
-        fill="rgba(100,60,80,0.3)" stroke="none"/>
-      <!-- Screen itself -->
-      <rect x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"
-        fill="url(#screenGrad)" stroke="#8ab8d0" stroke-width="1"/>
+<!-- BODY -->
+<rect x="192" y="120"
+width="208"
+height="367"
+rx="60"
+fill="#f8d9ea"
+stroke="#fff"
+stroke-width="8"/>
 
-      <!-- Screen content group -->
-      <g id="screen-content" clip-path="url(#screenClip)">
-        <!-- Background fill inside screen -->
-        <rect x="219.42" y="156.56" width="153.15" height="141.21" fill="#c4e1ef"/>
-        <!-- Album art placeholder area -->
-        <rect x="235" y="168" width="62" height="62" rx="8" ry="8" fill="rgba(255,255,255,0.25)" id="albumArtBg"/>
-        <text id="albumEmoji" x="266" y="210" text-anchor="middle" font-size="36" dominant-baseline="middle"></text>
-        <!-- Track info text -->
-        <text id="screenTitle" x="308" y="188" text-anchor="middle" font-size="11"
-          font-family="Futura, DM Sans, sans-serif" font-weight="600" fill="#1a3a50">Loading...</text>
-        <text id="screenArtist" x="308" y="204" text-anchor="middle" font-size="9"
-          font-family="Futura, DM Sans, sans-serif" fill="#2a5070">...</text>
-        <!-- Progress line -->
-        <rect x="234" y="220" width="124" height="3" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-        <rect id="screenProgress" x="234" y="220" width="0" height="3" rx="1.5" fill="#ef60a3"/>
-        <!-- Time labels -->
-        <text id="screenElapsed" x="234" y="232" font-size="8" font-family="Futura, monospace" fill="#2a5070">0:00</text>
-        <text id="screenDuration" x="358" y="232" text-anchor="end" font-size="8" font-family="Futura, monospace" fill="#2a5070">0:00</text>
-        <!-- Play/pause indicator -->
-        <text id="screenPlayIcon" x="296" y="258" text-anchor="middle" font-size="22" fill="#ef60a3">▶</text>
-        <!-- Equalizer bars (shown when playing) -->
-        <g id="eqBars" opacity="0">
-          <rect x="275" y="255" width="4" height="8" rx="1" fill="#ef60a3" id="eq1"/>
-          <rect x="282" y="252" width="4" height="11" rx="1" fill="#ef60a3" id="eq2"/>
-          <rect x="289" y="257" width="4" height="6" rx="1" fill="#ef60a3" id="eq3"/>
-          <rect x="296" y="250" width="4" height="13" rx="1" fill="#ef60a3" id="eq4"/>
-          <rect x="303" y="255" width="4" height="8" rx="1" fill="#ef60a3" id="eq5"/>
-          <rect x="310" y="253" width="4" height="10" rx="1" fill="#ef60a3" id="eq6"/>
-        </g>
-      </g>
-      <!-- Screen glare -->
-      <rect x="219.42" y="156.56" width="153.15" height="141.21" rx="30" ry="30"
-        fill="url(#screenGlare)" stroke="none" pointer-events="none"/>
+<!-- SCREEN -->
+<rect x="219"
+y="156"
+width="153"
+height="141"
+rx="30"
+fill="#c8e5f1"/>
 
-      <!-- ══ MENU TEXT ══ -->
-      <text font-size="13" transform="translate(264 344)" font-family="Futura, DM Sans, sans-serif"
-        font-weight="600" fill="rgba(160,80,120,0.9)" letter-spacing="2">MENU</text>
+<!-- SCREEN CONTENT -->
+<text id="screenTitle"
+x="296"
+y="190"
+text-anchor="middle"
+font-size="12"
+fill="#234">
+Loading...
+</text>
 
-      <!-- ══ CONTROL WHEEL ══ -->
-      <!-- Wheel shadow -->
-      <circle cx="296" cy="392.26" r="84" fill="rgba(150,50,90,0.2)" filter="url(#wheelShadow)"/>
-      <!-- Outer wheel ring -->
-      <circle cx="296" cy="392.26" r="80.65" fill="url(#wheelGrad)" stroke="#c03070" stroke-width="1"/>
-      <!-- Wheel glare -->
-      <ellipse cx="275" cy="372" rx="40" ry="28" fill="url(#wheelGlare)"/>
-      <!-- Wheel bevel inner ring -->
-      <circle cx="296" cy="392.26" r="80.65" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-      <!-- Pulse ring (animated when playing) -->
-      <circle id="pulseRing" cx="296" cy="392.26" r="80" fill="none" stroke="rgba(239,96,163,0.4)" stroke-width="2.5" class="pulse-ring"/>
+<text id="screenArtist"
+x="296"
+y="210"
+text-anchor="middle"
+font-size="10"
+fill="#456">
+...
+</text>
 
-      <!-- Center button -->
-      <circle cx="296" cy="392.26" r="27.86" fill="url(#centerGrad)" stroke="#d8a0c0" stroke-width="1.2"/>
-      <circle cx="296" cy="392.26" r="27.86" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-      <!-- Center highlight -->
-      <ellipse cx="288" cy="384" rx="10" ry="7" fill="rgba(255,255,255,0.4)"/>
+<rect x="236"
+y="226"
+width="120"
+height="4"
+rx="2"
+fill="rgba(255,255,255,.3)"/>
 
-      <!-- ══ BUTTON SYMBOLS ══ -->
-      <!-- Previous (left arrow) -->
-      <polygon points="253.55 369.23 253.55 401.23 227.87 385.23" fill="rgba(255,255,255,0.9)" stroke="none"/>
-      <!-- Next (right arrow) -->
-      <polygon points="338.45 369.23 338.45 401.23 364.13 385.23" fill="rgba(255,255,255,0.9)" stroke="none"/>
-      <!-- Play triangle -->
-      <polygon points="278.62 428.69 278.62 452.24 295.44 440.46" fill="rgba(255,255,255,0.9)" stroke="none"/>
-      <!-- Pause bars -->
-      <rect x="301.24" y="431.37" width="4.58" height="18.18" rx="1" fill="rgba(255,255,255,0.9)"/>
-      <rect x="312.09" y="431.37" width="4.58" height="18.18" rx="1" fill="rgba(255,255,255,0.9)"/>
+<rect id="screenProgress"
+x="236"
+y="226"
+width="0"
+height="4"
+rx="2"
+fill="#ef60a3"/>
 
-      <!-- ══ INVISIBLE HIT AREAS (interactive zones) ══ -->
-      <!-- Prev button zone -->
-      <ellipse id="btn-prev" cx="237" cy="392.26" rx="30" ry="30"
-        fill="transparent" class="btn-zone" style="cursor:pointer"/>
-      <!-- Next button zone -->
-      <ellipse id="btn-next" cx="355" cy="392.26" rx="30" ry="30"
-        fill="transparent" class="btn-zone" style="cursor:pointer"/>
-      <!-- Play/Pause zone (bottom of wheel) -->
-      <ellipse id="btn-play" cx="296" cy="442" rx="30" ry="22"
-        fill="transparent" class="btn-zone" style="cursor:pointer"/>
-      <!-- Center button -->
-      <circle id="btn-center" cx="296" cy="392.26" r="27.86"
-        fill="transparent" class="btn-zone" style="cursor:pointer"/>
-      <!-- Menu zone (top of wheel) -->
-      <ellipse id="btn-menu" cx="296" cy="348" rx="30" ry="18"
-        fill="transparent" class="btn-zone" style="cursor:pointer"/>
-    </svg>
-  </div>
+<text id="screenTime"
+x="296"
+y="250"
+text-anchor="middle"
+font-size="10"
+fill="#345">
+0:00 / 1:00
+</text>
 
-  <div class="info-panel" id="infoPanel">
-    <div class="track-title" id="infoTitle">Select a track</div>
-    <div class="track-artist" id="infoArtist">Butterfly iPod</div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progressFill"></div>
-    </div>
-    <div class="time-row">
-      <span id="timeElapsed">0:00</span>
-      <span id="timeDuration">0:00</span>
-    </div>
-  </div>
+<text id="screenPlay"
+x="296"
+y="278"
+text-anchor="middle"
+font-size="24"
+fill="#ef60a3">
+▶
+</text>
+
+<!-- EQ -->
+<g id="eqBars">
+<rect class="eq" x="274" y="270" width="4" height="12" rx="1" fill="#ef60a3"/>
+<rect class="eq" x="282" y="265" width="4" height="18" rx="1" fill="#ef60a3"/>
+<rect class="eq" x="290" y="272" width="4" height="10" rx="1" fill="#ef60a3"/>
+<rect class="eq" x="298" y="262" width="4" height="20" rx="1" fill="#ef60a3"/>
+<rect class="eq" x="306" y="268" width="4" height="14" rx="1" fill="#ef60a3"/>
+<rect class="eq" x="314" y="264" width="4" height="18" rx="1" fill="#ef60a3"/>
+</g>
+
+<!-- WHEEL -->
+<circle cx="296"
+cy="392"
+r="82"
+fill="#ef60a3"
+stroke="#ffcae2"
+stroke-width="8"/>
+
+<circle cx="296"
+cy="392"
+r="28"
+fill="#ffe8f3"/>
+
+<!-- LABELS -->
+<text x="296"
+y="345"
+text-anchor="middle"
+font-size="13"
+fill="white">
+MENU
+</text>
+
+<!-- ICONS -->
+<polygon points="228,392 254,375 254,409"
+fill="white"/>
+
+<polygon points="364,392 338,375 338,409"
+fill="white"/>
+
+<polygon points="282,438 282,458 298,448"
+fill="white"/>
+
+<rect x="305" y="436" width="5" height="18" rx="1" fill="white"/>
+<rect x="315" y="436" width="5" height="18" rx="1" fill="white"/>
+
+<!-- BUTTONS -->
+<circle id="btn-prev"
+cx="238"
+cy="392"
+r="34"
+fill="transparent"
+class="btn-zone"/>
+
+<circle id="btn-next"
+cx="355"
+cy="392"
+r="34"
+fill="transparent"
+class="btn-zone"/>
+
+<ellipse id="btn-play"
+cx="296"
+cy="445"
+rx="35"
+ry="24"
+fill="transparent"
+class="btn-zone"/>
+
+<circle id="btn-center"
+cx="296"
+cy="392"
+r="30"
+fill="transparent"
+class="btn-zone"/>
+
+</svg>
+
+<div class="info-panel">
+
+<div class="track-title" id="infoTitle">
+Loading...
+</div>
+
+<div class="track-artist" id="infoArtist">
+Butterfly Pod
+</div>
+
+<div class="progress-wrap">
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="time-row">
+<span id="elapsedText">0:00</span>
+<span>1:00</span>
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
+
 const tracks = [
-  { title: "Sugar Plum Fairy",  artist: "Dream Synth",   duration: 213, emoji: "🌸" },
-  { title: "Neon Butterfly",    artist: "Electric Bloom", duration: 187, emoji: "🦋" },
-  { title: "Candy Cloud",       artist: "Pastel Wave",   duration: 241, emoji: "🍬" },
-  { title: "Pink Horizon",      artist: "Sunset Girl",   duration: 198, emoji: "🌅" },
-  { title: "Glitter Rain",      artist: "Sparkle Pop",   duration: 222, emoji: "✨" },
-  { title: "Moonpetal",         artist: "Lunar Haze",    duration: 265, emoji: "🌙" },
+
+{
+title:"Butterfly",
+artist:"Custom Upload",
+file:"Butterfly(1).mp3"
+},
+
+{
+title:"...Baby One More Time",
+artist:"Britney Spears",
+file:"_Baby One More Time(1).mp3"
+},
+
+{
+title:"I Want It That Way",
+artist:"Backstreet Boys",
+file:"I Want It That Way(1).mp3"
+}
+
 ];
+
+const audio = new Audio();
 
 let currentTrack = 0;
 let isPlaying = false;
-let elapsed = 0;
-let ticker = null;
-let eqAnim = null;
 
-const screenTitle   = document.getElementById('screenTitle');
-const screenArtist  = document.getElementById('screenArtist');
-const screenProgress= document.getElementById('screenProgress');
-const screenElapsed = document.getElementById('screenElapsed');
-const screenDuration= document.getElementById('screenDuration');
-const screenPlayIcon= document.getElementById('screenPlayIcon');
-const albumEmoji    = document.getElementById('albumEmoji');
-const eqBars        = document.getElementById('eqBars');
-const progressFill  = document.getElementById('progressFill');
-const infoTitle     = document.getElementById('infoTitle');
-const infoArtist    = document.getElementById('infoArtist');
-const timeElapsed   = document.getElementById('timeElapsed');
-const timeDuration  = document.getElementById('timeDuration');
-const pulseRing     = document.getElementById('pulseRing');
-const playerWrap    = document.getElementById('playerWrap');
+const screenTitle =
+document.getElementById('screenTitle');
 
-function fmt(s) {
-  const m = Math.floor(s/60), sec = Math.floor(s%60);
-  return `${m}:${sec.toString().padStart(2,'0')}`;
+const screenArtist =
+document.getElementById('screenArtist');
+
+const progress =
+document.getElementById('progress');
+
+const screenProgress =
+document.getElementById('screenProgress');
+
+const infoTitle =
+document.getElementById('infoTitle');
+
+const infoArtist =
+document.getElementById('infoArtist');
+
+const elapsedText =
+document.getElementById('elapsedText');
+
+const screenTime =
+document.getElementById('screenTime');
+
+const screenPlay =
+document.getElementById('screenPlay');
+
+const playerWrap =
+document.getElementById('playerWrap');
+
+function formatTime(sec){
+
+const m = Math.floor(sec/60);
+const s = Math.floor(sec%60);
+
+return `${m}:${s.toString().padStart(2,'0')}`;
+
 }
 
-function loadTrack(idx) {
-  const t = tracks[idx];
-  screenTitle.textContent   = t.title;
-  screenArtist.textContent  = t.artist;
-  screenDuration.textContent= fmt(t.duration);
-  timeDuration.textContent  = fmt(t.duration);
-  albumEmoji.textContent    = t.emoji;
-  infoTitle.textContent     = t.title;
-  infoArtist.textContent    = t.artist;
-  elapsed = 0;
-  updateProgress();
+function loadTrack(index){
+
+const t = tracks[index];
+
+screenTitle.textContent = t.title;
+screenArtist.textContent = t.artist;
+
+infoTitle.textContent = t.title;
+infoArtist.textContent = t.artist;
+
+audio.src = t.file;
+
+progress.style.width = '0%';
+screenProgress.setAttribute('width',0);
+
+elapsedText.textContent = '0:00';
+screenTime.textContent = '0:00 / 1:00';
+
 }
 
-function updateProgress() {
-  const t = tracks[currentTrack];
-  const pct = t.duration > 0 ? (elapsed / t.duration) * 100 : 0;
-  screenProgress.setAttribute('width', (124 * pct / 100).toFixed(1));
-  screenElapsed.textContent = fmt(elapsed);
-  timeElapsed.textContent   = fmt(elapsed);
-  progressFill.style.width  = pct.toFixed(1) + '%';
+function play(){
+
+audio.play();
+
+isPlaying = true;
+
+playerWrap.classList.add('playing');
+
+screenPlay.textContent = '⏸';
+
+spawnNoteBurst(12);
+
 }
 
-function startEQ() {
-  eqBars.setAttribute('opacity','1');
-  screenPlayIcon.setAttribute('opacity','0');
-  clearInterval(eqAnim);
-  const bars = [
-    document.getElementById('eq1'),
-    document.getElementById('eq2'),
-    document.getElementById('eq3'),
-    document.getElementById('eq4'),
-    document.getElementById('eq5'),
-    document.getElementById('eq6'),
-  ];
-  eqAnim = setInterval(() => {
-    bars.forEach(b => {
-      const h = 4 + Math.random() * 14;
-      const y = 263 - h;
-      b.setAttribute('height', h.toFixed(0));
-      b.setAttribute('y', y.toFixed(0));
-    });
-  }, 130);
+function pause(){
+
+audio.pause();
+
+isPlaying = false;
+
+playerWrap.classList.remove('playing');
+
+screenPlay.textContent = '▶';
+
+spawnNoteBurst(6);
+
 }
 
-function stopEQ() {
-  clearInterval(eqAnim);
-  eqBars.setAttribute('opacity','0');
-  screenPlayIcon.setAttribute('opacity','1');
+function togglePlay(){
+
+if(isPlaying){
+pause();
+}else{
+play();
 }
 
-function play() {
-  isPlaying = true;
-  screenPlayIcon.textContent = '⏸';
-  playerWrap.classList.add('playing');
-  startEQ();
-  clearInterval(ticker);
-  ticker = setInterval(() => {
-    elapsed++;
-    if (elapsed >= tracks[currentTrack].duration) {
-      next();
-    } else {
-      updateProgress();
-    }
-  }, 1000);
 }
 
-function pause() {
-  isPlaying = false;
-  screenPlayIcon.textContent = '▶';
-  playerWrap.classList.remove('playing');
-  stopEQ();
-  clearInterval(ticker);
+function nextTrack(){
+
+currentTrack++;
+
+if(currentTrack >= tracks.length){
+currentTrack = 0;
 }
 
-function togglePlay() {
-  if (isPlaying) pause(); else play();
-  spawnNote();
+loadTrack(currentTrack);
+
+if(isPlaying){
+play();
 }
 
-function next() {
-  currentTrack = (currentTrack + 1) % tracks.length;
-  elapsed = 0;
-  loadTrack(currentTrack);
-  if (isPlaying) play();
-  spawnNote();
+spawnNoteBurst(10);
+
 }
 
-function prev() {
-  if (elapsed > 3) {
-    elapsed = 0;
-    updateProgress();
-  } else {
-    currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
-    elapsed = 0;
-    loadTrack(currentTrack);
-  }
-  if (isPlaying) play();
-  spawnNote();
+function prevTrack(){
+
+currentTrack--;
+
+if(currentTrack < 0){
+currentTrack = tracks.length - 1;
 }
 
-function spawnNote() {
-  const emojis = ['♪','♫','🎵','🎶'];
-  const el = document.createElement('div');
-  el.className = 'music-note';
-  el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-  const nx = (Math.random()-0.5)*80 + 'px';
-  const ny = -(40 + Math.random()*60) + 'px';
-  el.style.setProperty('--nx', nx);
-  el.style.setProperty('--ny', ny);
-  el.style.left = (200 + Math.random()*200) + 'px';
-  el.style.top  = (350 + Math.random()*60) + 'px';
-  document.querySelector('.scene').appendChild(el);
-  setTimeout(() => el.remove(), 2200);
+loadTrack(currentTrack);
+
+if(isPlaying){
+play();
 }
 
-// Button events
-document.getElementById('btn-play').addEventListener('click', togglePlay);
-document.getElementById('btn-center').addEventListener('click', togglePlay);
-document.getElementById('btn-next').addEventListener('click', next);
-document.getElementById('btn-prev').addEventListener('click', prev);
-document.getElementById('btn-menu').addEventListener('click', () => {
-  pause();
-  elapsed = 0;
-  updateProgress();
+spawnNoteBurst(10);
+
+}
+
+function spawnNoteBurst(count=1){
+
+const notes = ['♪','♫','♬','🎵'];
+
+for(let i=0;i<count;i++){
+
+const el = document.createElement('div');
+
+el.className = 'music-note';
+
+el.textContent =
+notes[Math.floor(Math.random()*notes.length)];
+
+const nx =
+(Math.random()-.5)*220 + 'px';
+
+const ny =
+-(100 + Math.random()*200) + 'px';
+
+el.style.setProperty('--nx',nx);
+el.style.setProperty('--ny',ny);
+
+el.style.left =
+(240 + Math.random()*120) + 'px';
+
+el.style.top =
+(330 + Math.random()*100) + 'px';
+
+el.style.fontSize =
+(18 + Math.random()*20) + 'px';
+
+document.body.appendChild(el);
+
+setTimeout(()=>{
+el.remove();
+},2500);
+
+}
+
+}
+
+audio.addEventListener('timeupdate',()=>{
+
+if(audio.currentTime >= 60){
+
+nextTrack();
+
+return;
+
+}
+
+const percent =
+(audio.currentTime / 60) * 100;
+
+progress.style.width =
+percent + '%';
+
+screenProgress.setAttribute(
+'width',
+120 * percent / 100
+);
+
+elapsedText.textContent =
+formatTime(audio.currentTime);
+
+screenTime.textContent =
+`${formatTime(audio.currentTime)} / 1:00`;
+
+if(Math.random() > .7){
+spawnNoteBurst(2);
+}
+
 });
 
-// Keyboard controls
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowRight') next();
-  if (e.code === 'ArrowLeft')  prev();
+audio.addEventListener('ended',()=>{
+nextTrack();
 });
 
-// Init
+document
+.getElementById('btn-play')
+.addEventListener('click',togglePlay);
+
+document
+.getElementById('btn-center')
+.addEventListener('click',togglePlay);
+
+document
+.getElementById('btn-next')
+.addEventListener('click',nextTrack);
+
+document
+.getElementById('btn-prev')
+.addEventListener('click',prevTrack);
+
+document.addEventListener('keydown',e=>{
+
+if(e.code === 'Space'){
+e.preventDefault();
+togglePlay();
+}
+
+if(e.code === 'ArrowRight'){
+nextTrack();
+}
+
+if(e.code === 'ArrowLeft'){
+prevTrack();
+}
+
+});
+
 loadTrack(0);
-screenPlayIcon.textContent = '▶';
+
 </script>
+
 </body>
 </html>
+```
