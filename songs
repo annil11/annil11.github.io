@@ -1,0 +1,18 @@
+<section>
+  <h2>My Songs</h2>
+
+  <figure>
+    <figcaption>Butterfly</figcaption>
+    <audio controls src="songs/Butterfly.mp3"></audio>
+  </figure>
+
+  <figure>
+    <figcaption>...Baby One More Time</figcaption>
+    <audio controls src="songs/Baby_One_More_Time.mp3"></audio>
+  </figure>
+
+  <figure>
+    <figcaption>I Want It That Way</figcaption>
+    <audio controls src="songs/I_Want_It_That_Way.mp3"></audio>
+  </figure>
+</section>
